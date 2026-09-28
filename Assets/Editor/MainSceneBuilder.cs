@@ -13,7 +13,7 @@ using UnityEngine.UI;
 /// </summary>
 public static class MainSceneBuilder
 {
-    private const string ScenePath = "Assets/Scenes/MainScene.unity";
+    private const string ScenePath = "Assets/Scenes/GameScene.unity";
     private const string EnemyPath = "Assets/Art/EnemyBody.png";
     private const string CrossfirePath = "Assets/Art/Crossfire.png";
     private const string GunPath = "Assets/Art/Gun.png";
@@ -132,7 +132,7 @@ public static class MainSceneBuilder
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log($"[QDG2] MainScene built at {ScenePath}");
+        Debug.Log($"[QDG2] GameScene built at {ScenePath}");
 
         if (Application.isBatchMode)
             EditorApplication.Exit(0);

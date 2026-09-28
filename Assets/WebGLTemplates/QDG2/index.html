@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
-    <title>Unity Web Player | {{{ PRODUCT_NAME }}}</title>
+    <title>{{{ PRODUCT_NAME }}}</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
 #if SHOW_DIAGNOSTICS
@@ -14,6 +14,8 @@
 #if DEVELOPMENT_PLAYER
   <script src="<<<TemplateData/profiler.js>>>"></script>
 #endif
+    <!-- Yandex Games SDK: /sdk.js is injected by the platform when hosted on Yandex. -->
+    <script src="/sdk.js"></script>
   </head>
   <body>
     <div id="unity-container" class="unity-fill">
@@ -29,6 +31,8 @@
     <script>
       var canvas = document.querySelector("#unity-canvas");
       var container = document.querySelector("#unity-container");
+      window.__yandexLang = "en";
+      window.ysdk = null;
 
       function unityShowBanner(msg, type) {
         var warningBanner = document.querySelector("#unity-warning");
@@ -49,7 +53,6 @@
         updateBannerVisibility();
       }
 
-      // Fit canvas to the browser window (not the monitor / fixed 960x600).
       function fitCanvasToWindow() {
         var w = Math.max(1, window.innerWidth || document.documentElement.clientWidth);
         var h = Math.max(1, window.innerHeight || document.documentElement.clientHeight);
@@ -89,25 +92,50 @@
 #endif
       document.querySelector("#unity-loading-bar").style.display = "block";
 
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          document.querySelector("#unity-loading-bar").style.display = "none";
-          fitCanvasToWindow();
+      function startUnity() {
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+          createUnityInstance(canvas, config, (progress) => {
+            document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+          }).then((unityInstance) => {
+            window.unityInstance = unityInstance;
+            document.querySelector("#unity-loading-bar").style.display = "none";
+            fitCanvasToWindow();
 #if SHOW_DIAGNOSTICS
-          document.getElementById("diagnostics-icon").onclick = () => {
-            unityDiagnostics.openDiagnosticsDiv(unityInstance.GetMetricsInfo);
-          };
+            document.getElementById("diagnostics-icon").onclick = () => {
+              unityDiagnostics.openDiagnosticsDiv(unityInstance.GetMetricsInfo);
+            };
 #endif
-        }).catch((message) => {
-          alert(message);
-        });
-      };
+          }).catch((message) => {
+            alert(message);
+          });
+        };
+        document.body.appendChild(script);
+      }
 
-      document.body.appendChild(script);
+      function initYandexThenUnity() {
+        if (typeof YaGames === "undefined" || !YaGames.init) {
+          console.warn("YaGames SDK not found (local build?). Starting Unity without Yandex.");
+          startUnity();
+          return;
+        }
+
+        YaGames.init().then(function (sdk) {
+          window.ysdk = sdk;
+          try {
+            if (sdk.environment && sdk.environment.i18n && sdk.environment.i18n.lang) {
+              window.__yandexLang = sdk.environment.i18n.lang;
+            }
+          } catch (e) {}
+          startUnity();
+        }).catch(function (err) {
+          console.warn("YaGames.init failed", err);
+          startUnity();
+        });
+      }
+
+      initYandexThenUnity();
     </script>
   </body>
 </html>

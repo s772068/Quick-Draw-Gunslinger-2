@@ -2,17 +2,20 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Swaps Background Image sprite by game-window aspect (not monitor):
-/// height &gt;= width → portrait sprite, otherwise landscape.
+/// Single Background Image: portrait → back_vert, landscape → back_hor.
+/// Aspect from game window (Canvas.pixelRect), same rule as OrientationControls.
 /// </summary>
 [RequireComponent(typeof(Image))]
 [ExecuteAlways]
+[DisallowMultipleComponent]
 public class OrientationBackground : MonoBehaviour
 {
     [SerializeField] private Image targetImage;
+    [SerializeField] private Sprite backVertSprite;
+    [SerializeField] private Sprite backHorSprite;
+    [Tooltip("Legacy aliases — used if backVert/backHor are empty.")]
     [SerializeField] private Sprite portraitSprite;
     [SerializeField] private Sprite landscapeSprite;
-    [Tooltip("If on, Preserve Aspect is forced off so each art fills the stretch Rect Transform.")]
     [SerializeField] private bool fillRectWithoutPreserveAspect = true;
 
     private int _lastWidth = -1;
@@ -23,11 +26,17 @@ public class OrientationBackground : MonoBehaviour
     {
         if (targetImage == null)
             targetImage = GetComponent<Image>();
-
         ApplyForCurrentView(force: true);
     }
 
     private void OnEnable()
+    {
+        if (targetImage == null)
+            targetImage = GetComponent<Image>();
+        ApplyForCurrentView(force: true);
+    }
+
+    private void Start()
     {
         ApplyForCurrentView(force: true);
     }
@@ -44,6 +53,8 @@ public class OrientationBackground : MonoBehaviour
     {
         if (targetImage == null)
             targetImage = GetComponent<Image>();
+        if (!Application.isPlaying)
+            ApplyForCurrentView(force: true);
     }
 #endif
 
@@ -62,9 +73,11 @@ public class OrientationBackground : MonoBehaviour
         _lastHeight = h;
         _lastPortrait = portrait;
 
-        Sprite next = portrait ? portraitSprite : landscapeSprite;
+        Sprite vert = backVertSprite != null ? backVertSprite : portraitSprite;
+        Sprite hor = backHorSprite != null ? backHorSprite : landscapeSprite;
+        Sprite next = portrait ? vert : hor;
         if (next == null)
-            next = portrait ? landscapeSprite : portraitSprite;
+            next = portrait ? hor : vert;
 
         if (next != null && targetImage.sprite != next)
             targetImage.sprite = next;
@@ -73,9 +86,6 @@ public class OrientationBackground : MonoBehaviour
             targetImage.preserveAspect = false;
     }
 
-    /// <summary>
-    /// Prefer the Canvas pixel rect (browser/game window). Fall back to Screen.
-    /// </summary>
     private void GetViewSize(out int width, out int height)
     {
         Canvas canvas = targetImage != null ? targetImage.canvas : null;

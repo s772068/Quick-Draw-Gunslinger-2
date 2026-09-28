@@ -18,7 +18,7 @@ using Debug = UnityEngine.Debug;
 /// </summary>
 public static class Gdd03Setup
 {
-    private const string ScenePath = "Assets/Scenes/MainScene.unity";
+    private const string ScenePath = "Assets/Scenes/GameScene.unity";
     private const string TouchDir = "Assets/Art/touchbtns";
     private const string BuildProfileDir = "Assets/Settings/Build Profiles";
     private const string WebGlProfilePath = BuildProfileDir + "/WebGL.asset";
@@ -176,7 +176,7 @@ public static class Gdd03Setup
         var controller = UnityEngine.Object.FindFirstObjectByType<RoundController>();
         if (controller == null)
         {
-            Debug.LogError("[Gdd03Setup] RoundController not found in MainScene.");
+            Debug.LogError("[Gdd03Setup] RoundController not found in GameScene.");
             return;
         }
 
