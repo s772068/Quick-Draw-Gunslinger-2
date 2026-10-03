@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Duel core loop for GDD 0.4. Scene objects stay editable in Scene view.
 /// </summary>
-public class RoundController : MonoBehaviour
+public partial class RoundController : MonoBehaviour
 {
     public enum ActionVisualState
     {
@@ -51,6 +51,7 @@ public class RoundController : MonoBehaviour
     [SerializeField] private GameObject bottomPanel;
     [SerializeField] private GameObject roundFinishPanel;
     [SerializeField] private TMP_Text roundResultText;
+    [SerializeField] private TMP_Text readyLabel;
     [SerializeField] private GameObject verticalControls;
     [SerializeField] private GameObject horizontalControls;
     [SerializeField] private GameObject topPanel;
@@ -216,6 +217,7 @@ public class RoundController : MonoBehaviour
         WireButtons();
         RefreshSoundVisual();
         ApplyLocalizedTexts();
+        BindSeriesUi();
         EnterWaitingToStart();
         YandexGamesSdk.GameplayStop();
     }
@@ -257,9 +259,8 @@ public class RoundController : MonoBehaviour
 #if !UNITY_EDITOR
         if (!hasFocus)
         {
-            Time.timeScale = 0f;
-            AudioListener.pause = true;
-            YandexGamesSdk.GameplayStop();
+            if (!_paused)
+                OpenPauseMenu();
         }
         else if (!GamePauseGate.IsUserPaused)
         {
@@ -273,28 +274,28 @@ public class RoundController : MonoBehaviour
     {
         // Platform pause freezes input via Update gate; menu state stays as-is.
         if (YandexGamesSdk.PlatformPaused)
-            SetGameplayHudInteractable(false);
+        {
+            if (!_paused)
+                OpenPauseMenu();
+            else
+                SetGameplayHudInteractable(false);
+        }
         else if (!_paused)
             ReassertActionInteractable();
     }
 
     private void ApplyLocalizedTexts()
     {
+        SceneTextLocalizer.Apply();
         SetButtonLabel(startButton, LocalizationTables.Keys.StartSeries);
-        SetButtonLabel(restartButton, LocalizationTables.Keys.Restart);
         SetButtonLabel(pauseContinueButton, LocalizationTables.Keys.Continue);
         SetButtonLabel(pauseExitButton, LocalizationTables.Keys.Exit);
 
-        // Result text is set on finish; keep current if already finished.
-        if (_phase == Phase.Finished && roundResultText != null && !string.IsNullOrEmpty(roundResultText.text))
-        {
-            // Re-apply win/lose if language flips mid-result (rare).
-            string t = roundResultText.text;
-            if (t == "Win" || t == "Победа" || t == LocalizationTables.Get(LocalizationTables.Keys.Win))
-                roundResultText.text = LocalizationTables.Get(LocalizationTables.Keys.Win);
-            else if (t == "Lose" || t == "Поражение" || t == LocalizationTables.Get(LocalizationTables.Keys.Lose))
-                roundResultText.text = LocalizationTables.Get(LocalizationTables.Keys.Lose);
-        }
+        if (readyLabel != null)
+            readyLabel.text = LocalizationTables.Get(LocalizationTables.Keys.Ready);
+
+        RefreshOutcomeTexts();
+        RefreshCounters();
     }
 
     private static void SetButtonLabel(Button button, string key)
@@ -323,6 +324,8 @@ public class RoundController : MonoBehaviour
             OnPullClicked();
         if (kb.fKey.wasPressedThisFrame)
             OnFireClicked();
+        if (kb.spaceKey.wasPressedThisFrame)
+            TryContinueSeriesHotkey();
     }
 
     private void AutoBindSceneRefs()
@@ -359,8 +362,24 @@ public class RoundController : MonoBehaviour
         if (roundStartPanel == null)
         {
             var t = hud.Find("RoundStart");
+            if (t == null)
+                t = hud.Find("RoundStartPanel");
             if (t != null)
                 roundStartPanel = t.gameObject;
+        }
+
+        if (readyLabel == null && roundStartPanel != null)
+        {
+            var t = roundStartPanel.transform.Find("ReadyLabel");
+            if (t != null)
+                readyLabel = t.GetComponent<TMP_Text>();
+        }
+
+        if (readyLabel == null)
+        {
+            var readyGo = GameObject.Find("ReadyLabel");
+            if (readyGo != null)
+                readyLabel = readyGo.GetComponent<TMP_Text>();
         }
 
         if (roundFinishPanel == null)
@@ -555,59 +574,22 @@ public class RoundController : MonoBehaviour
             hud = canvas.transform;
 
         if (pauseMenuRoot == null)
-        {
-            var existing = hud.Find("PauseMenu");
-            if (existing != null)
-                pauseMenuRoot = existing.gameObject;
-        }
-
-        if (pauseMenuRoot == null)
-        {
-            pauseMenuRoot = new GameObject("PauseMenu", typeof(RectTransform));
-            pauseMenuRoot.transform.SetParent(hud, false);
-            var rootRt = pauseMenuRoot.GetComponent<RectTransform>();
-            StretchFull(rootRt);
-
-            var overlayGo = new GameObject("Overlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            overlayGo.transform.SetParent(pauseMenuRoot.transform, false);
-            StretchFull(overlayGo.GetComponent<RectTransform>());
-            var overlayImg = overlayGo.GetComponent<Image>();
-            overlayImg.color = new Color(0f, 0f, 0f, 128f / 255f);
-            overlayImg.raycastTarget = true;
-
-            var panelGo = new GameObject("Panel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            panelGo.transform.SetParent(pauseMenuRoot.transform, false);
-            var panelRt = panelGo.GetComponent<RectTransform>();
-            panelRt.anchorMin = new Vector2(0.5f, 0.5f);
-            panelRt.anchorMax = new Vector2(0.5f, 0.5f);
-            panelRt.pivot = new Vector2(0.5f, 0.5f);
-            panelRt.sizeDelta = new Vector2(420f, 260f);
-            panelRt.anchoredPosition = Vector2.zero;
-            var panelImg = panelGo.GetComponent<Image>();
-            panelImg.color = new Color(0.15f, 0.12f, 0.1f, 0.95f);
-
-            pauseContinueButton = CreatePauseButton(
-                panelGo.transform,
-                "Continue",
-                LocalizationTables.Get(LocalizationTables.Keys.Continue),
-                new Vector2(0f, 40f));
-            pauseExitButton = CreatePauseButton(
-                panelGo.transform,
-                "Exit",
-                LocalizationTables.Get(LocalizationTables.Keys.Exit),
-                new Vector2(0f, -50f));
-        }
+            pauseMenuRoot = SceneUiFactory.EnsurePauseMenu(hud);
 
         if (pauseContinueButton == null && pauseMenuRoot != null)
         {
-            var t = pauseMenuRoot.transform.Find("Panel/Continue");
+            var t = pauseMenuRoot.transform.Find("Panel/PauseContinue");
+            if (t == null)
+                t = pauseMenuRoot.transform.Find("Panel/Continue");
             if (t != null)
                 pauseContinueButton = t.GetComponent<Button>();
         }
 
         if (pauseExitButton == null && pauseMenuRoot != null)
         {
-            var t = pauseMenuRoot.transform.Find("Panel/Exit");
+            var t = pauseMenuRoot.transform.Find("Panel/PauseExit");
+            if (t == null)
+                t = pauseMenuRoot.transform.Find("Panel/Exit");
             if (t != null)
                 pauseExitButton = t.GetComponent<Button>();
         }
@@ -846,7 +828,10 @@ public class RoundController : MonoBehaviour
         if (restartButton != null)
         {
             restartButton.onClick.RemoveAllListeners();
-            restartButton.onClick.AddListener(OnRestartClicked);
+            if (restartButton.gameObject.name == "FinishSeriesBtn")
+                restartButton.onClick.AddListener(OnFinishSeriesClicked);
+            else
+                restartButton.onClick.AddListener(OnRestartSeriesClicked);
         }
 
         if (menuButton != null)
@@ -907,6 +892,7 @@ public class RoundController : MonoBehaviour
 
         SetPanelActive(roundStartPanel, true);
         SetPanelActive(roundFinishPanel, false);
+        HideSeriesOverlays();
         SetPanelActive(bottomPanel, true);
         SetPanelActive(pauseMenuRoot, false);
 
@@ -933,6 +919,7 @@ public class RoundController : MonoBehaviour
         if (_paused || YandexGamesSdk.PlatformPaused || _phase != Phase.WaitingToStart)
             return;
 
+        BeginSeriesIfNeeded();
         SetPanelActive(roundStartPanel, false);
         _phase = Phase.WaitingForBell;
         SetActionState(_drawActions, ActionVisualState.Active);
@@ -950,6 +937,7 @@ public class RoundController : MonoBehaviour
 
         _bellFired = true;
         _phase = Phase.BellShown;
+        MarkDuelTimer();
         SetBellState(fired: true);
         PlaySfx(sfxBell);
         _enemyRoutine = StartCoroutine(EnemyShootLoop());
@@ -962,7 +950,7 @@ public class RoundController : MonoBehaviour
 
         if (_phase == Phase.WaitingForBell && !_bellFired)
         {
-            FinishRound(LocalizationTables.Get(LocalizationTables.Keys.Lose));
+            FinishRound(RoundOutcome.FalseStart);
             return;
         }
 
@@ -1030,22 +1018,12 @@ public class RoundController : MonoBehaviour
             StopCrossfireRoutine();
             StopEnemyRoutine();
             PlaySfx(sfxEnemyDie);
-            FinishRound(LocalizationTables.Get(LocalizationTables.Keys.Win));
+            FinishRound(RoundOutcome.Win);
             return;
         }
 
         PlaySfx(sfxMissPlayer);
         BeginMissRecovery();
-    }
-
-    private void OnRestartClicked()
-    {
-        if (_paused || YandexGamesSdk.PlatformPaused)
-            return;
-        Time.timeScale = 1f;
-        AudioListener.pause = false;
-        YandexGamesSdk.GameplayStop();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     private void OnMenuClicked()
@@ -1136,15 +1114,41 @@ public class RoundController : MonoBehaviour
                 startButton.interactable = false;
             if (restartButton != null)
                 restartButton.interactable = false;
+
+            SetChildButtonInteractable(roundFinishPanel, "FinishSeriesBtn", false);
+            SetChildButtonInteractable(roundFinishPanel, "ContinueSeriesBtn", false);
+            SetChildButtonInteractable(roundFinishPanel, "RestartSeriesBtn", false);
+            SetChildButtonInteractable(roundFinishPanel, "ExitBtn", false);
+            SetChildButtonInteractable(_seriesSummary, "RestartSeriesBtn", false);
+            SetChildButtonInteractable(_seriesSummary, "ExitBtn", false);
         }
         else if (startButton != null && _phase == Phase.WaitingToStart)
         {
             startButton.interactable = true;
         }
-        else if (restartButton != null && _phase == Phase.Finished)
+        else if (_phase == Phase.Finished)
         {
-            restartButton.interactable = true;
+            if (restartButton != null)
+                restartButton.interactable = true;
+            SetChildButtonInteractable(roundFinishPanel, "FinishSeriesBtn", true);
+            SetChildButtonInteractable(roundFinishPanel, "ContinueSeriesBtn", true);
+            SetChildButtonInteractable(roundFinishPanel, "RestartSeriesBtn", true);
+            SetChildButtonInteractable(roundFinishPanel, "ExitBtn", true);
+            SetChildButtonInteractable(_seriesSummary, "RestartSeriesBtn", true);
+            SetChildButtonInteractable(_seriesSummary, "ExitBtn", true);
         }
+    }
+
+    private static void SetChildButtonInteractable(GameObject root, string childName, bool interactable)
+    {
+        if (root == null)
+            return;
+        Transform t = root.transform.Find(childName);
+        if (t == null)
+            return;
+        var button = t.GetComponent<Button>();
+        if (button != null)
+            button.interactable = interactable;
     }
 
     private void ReassertActionInteractable()
@@ -1200,9 +1204,13 @@ public class RoundController : MonoBehaviour
             soundImage.sprite = sprite;
     }
 
-    private void FinishRound(string result)
+    private void FinishRound(RoundOutcome outcome)
     {
         _phase = Phase.Finished;
+        _outcome = outcome;
+        if (outcome == RoundOutcome.Win)
+            _series.AddWin(TakeDuelSeconds());
+
         StopBellRoutine();
         StopCrossfireRoutine();
         StopEnemyRoutine();
@@ -1217,11 +1225,8 @@ public class RoundController : MonoBehaviour
         SetIndicatorVisual(pullButton, ActionVisualState.Inactive);
         SetIndicatorVisual(fireButton, ActionVisualState.Inactive);
 
-        if (roundResultText != null)
-            roundResultText.text = result;
-
         YandexGamesSdk.GameplayStop();
-        SetPanelActive(roundFinishPanel, true);
+        PresentRoundFinish(outcome);
     }
 
     private void BeginMissRecovery()
@@ -1374,7 +1379,7 @@ public class RoundController : MonoBehaviour
             }
 
             PlaySfx(sfxPlayerHit);
-            FinishRound(LocalizationTables.Get(LocalizationTables.Keys.Lose));
+            FinishRound(RoundOutcome.EnemyWin);
             yield break;
         }
     }

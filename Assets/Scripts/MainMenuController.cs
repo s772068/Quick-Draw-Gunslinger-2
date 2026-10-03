@@ -40,6 +40,9 @@ public class MainMenuController : MonoBehaviour
             soundImage = soundButton.targetGraphic as Image;
 
         RefreshSoundVisual();
+        var boards = GameObject.Find("LeaderboardsPanel");
+        if (boards != null && boards.GetComponent<MenuLeaderboardPanel>() == null)
+            boards.AddComponent<MenuLeaderboardPanel>();
         YandexGamesSdk.GameplayStop();
     }
 
@@ -84,6 +87,8 @@ public class MainMenuController : MonoBehaviour
 
     private void ApplyLocalizedTexts()
     {
+        SceneTextLocalizer.Apply();
+
         if (titleText != null)
             titleText.text = LocalizationTables.Get(LocalizationTables.Keys.GameTitle);
 

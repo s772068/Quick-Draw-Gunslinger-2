@@ -50,6 +50,100 @@ MonoBehaviour:
     m_Localized: Exit
     m_Metadata:
       m_Items: []
+  - m_Id: 674226182
+    m_Localized: Get Ready!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1483224525037568
+    m_Localized: False start!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1483414086606848
+    m_Localized: The enemy was faster
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1491044565770240
+    m_Localized: 'Series complete.
+
+      Your result:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226183
+    m_Localized: Finish series
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226184
+    m_Localized: 'Continue series
+
+      [SPACE]'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226185
+    m_Localized: New series
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226186
+    m_Localized: Yes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226187
+    m_Localized: No
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226188
+    m_Localized: Finish the series and save your result?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226189
+    m_Localized: 'Series complete.
+
+      Your result:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226190
+    m_Localized: Sure Hand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226191
+    m_Localized: Fastest Hand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226192
+    m_Localized: Steady Hand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226193
+    m_Localized: Leaderboards
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226194
+    m_Localized: 'Result:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226195
+    m_Localized: 'Place:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226196
+    m_Localized: Sign in to save your result on the leaderboard.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226197
+    m_Localized: Sign in
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226198
+    m_Localized: Don't save
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226199
+    m_Localized: No scores yet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226200
+    m_Localized: 'Your record: {0}'
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

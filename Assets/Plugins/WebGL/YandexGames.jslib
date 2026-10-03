@@ -82,6 +82,107 @@ var YandexGamesLib = {
         } catch (e) {
             console.warn("Yandex pause/resume bind failed", e);
         }
+    },
+
+    YandexGames_QueryAuth: function (gameObjectPtr, methodPtr) {
+        var go = UTF8ToString(gameObjectPtr);
+        var method = UTF8ToString(methodPtr);
+        var ysdk = (typeof window !== "undefined") ? window.ysdk : null;
+        if (!ysdk || typeof ysdk.getPlayer !== "function") {
+            SendMessage(go, method, "0");
+            return;
+        }
+
+        ysdk.getPlayer({ signed: false }).then(function (player) {
+            var ok = player && typeof player.isAuthorized === "function" && player.isAuthorized();
+            SendMessage(go, method, ok ? "1" : "0");
+        }).catch(function () {
+            SendMessage(go, method, "0");
+        });
+    },
+
+    YandexGames_OpenAuth: function (gameObjectPtr, methodPtr) {
+        var go = UTF8ToString(gameObjectPtr);
+        var method = UTF8ToString(methodPtr);
+        var ysdk = (typeof window !== "undefined") ? window.ysdk : null;
+        if (!ysdk || !ysdk.auth || typeof ysdk.auth.openAuthDialog !== "function") {
+            SendMessage(go, method, "0");
+            return;
+        }
+
+        ysdk.auth.openAuthDialog().then(function () {
+            SendMessage(go, method, "1");
+        }).catch(function () {
+            SendMessage(go, method, "0");
+        });
+    },
+
+    YandexGames_SubmitScore: function (boardPtr, score, gameObjectPtr, okPtr, failPtr) {
+        var board = UTF8ToString(boardPtr);
+        var go = UTF8ToString(gameObjectPtr);
+        var ok = UTF8ToString(okPtr);
+        var fail = UTF8ToString(failPtr);
+        var ysdk = (typeof window !== "undefined") ? window.ysdk : null;
+        if (!ysdk || !ysdk.leaderboards || typeof ysdk.leaderboards.setScore !== "function") {
+            SendMessage(go, fail, "no sdk");
+            return;
+        }
+
+        ysdk.leaderboards.setScore(board, score).then(function () {
+            SendMessage(go, ok, board);
+        }).catch(function (e) {
+            SendMessage(go, fail, e && e.message ? String(e.message) : "setScore failed");
+        });
+    },
+
+    YandexGames_LoadEntries: function (boardPtr, gameObjectPtr, methodPtr) {
+        var board = UTF8ToString(boardPtr);
+        var go = UTF8ToString(gameObjectPtr);
+        var method = UTF8ToString(methodPtr);
+        var ysdk = (typeof window !== "undefined") ? window.ysdk : null;
+        if (!ysdk || !ysdk.leaderboards || typeof ysdk.leaderboards.getEntries !== "function") {
+            SendMessage(go, method, "fail");
+            return;
+        }
+
+        function pack(page) {
+            var lines = [];
+            var userRank = page && page.userRank ? page.userRank : 0;
+            lines.push(String(userRank));
+            var entries = page && page.entries ? page.entries : [];
+            for (var i = 0; i < entries.length; i++) {
+                var e = entries[i];
+                var name = "";
+                var avatar = "";
+                if (e.player) {
+                    name = e.player.publicName ? String(e.player.publicName) : "";
+                    try {
+                        if (typeof e.player.getAvatarSrc === "function")
+                            avatar = String(e.player.getAvatarSrc("small") || "");
+                    } catch (err) {}
+                }
+                name = name.replace(/\|/g, " ").replace(/\n/g, " ");
+                avatar = avatar.replace(/\|/g, " ").replace(/\n/g, " ");
+                lines.push(String(e.rank || 0) + "|" + name + "|" + String(e.score || 0) + "|" + avatar);
+            }
+            return lines.join("\n");
+        }
+
+        function load(includeUser) {
+            return ysdk.leaderboards.getEntries(board, {
+                quantityTop: 3,
+                includeUser: includeUser,
+                quantityAround: 1
+            });
+        }
+
+        load(true).catch(function () {
+            return load(false);
+        }).then(function (page) {
+            SendMessage(go, method, pack(page));
+        }).catch(function () {
+            SendMessage(go, method, "fail");
+        });
     }
 };
 

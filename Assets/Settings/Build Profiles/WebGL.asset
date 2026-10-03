@@ -21,6 +21,9 @@ MonoBehaviour:
   m_OverrideGlobalSceneList: 1
   m_Scenes:
   - m_enabled: 1
+    m_path: Assets/Scenes/MainMenu.unity
+    m_guid: f1e2d3c4b5a697887766554433221100
+  - m_enabled: 1
     m_path: Assets/Scenes/GameScene.unity
     m_guid: eb8e2fb2f5ed4444e9dc04aef9dbfead
   m_HasScriptingDefines: 0
@@ -46,6 +49,7 @@ MonoBehaviour:
         m_InstallInBuildFolder: 0
         m_InsightsSettingsContainer:
           m_BuildProfileEngineDiagnosticsState: 2
+        m_AdaptivePerformanceEnabled: 0
         m_CodeOptimization: 4
         m_WebGLClientBrowserPath: 
         m_WebGLClientBrowserType: 0

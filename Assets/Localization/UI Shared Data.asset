@@ -47,6 +47,94 @@ MonoBehaviour:
     m_Key: exit
     m_Metadata:
       m_Items: []
+  - m_Id: 674226182
+    m_Key: ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1483224525037568
+    m_Key: falsestart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1483414086606848
+    m_Key: enemywins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1491044565770240
+    m_Key: 'SeriesResultText '
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226183
+    m_Key: finish_series
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226184
+    m_Key: continue_series
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226185
+    m_Key: restart_series
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226186
+    m_Key: yes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226187
+    m_Key: no
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226188
+    m_Key: are_you_sure
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226189
+    m_Key: series_result
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226190
+    m_Key: sure_hand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226191
+    m_Key: fastest_hand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226192
+    m_Key: steady_hand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226193
+    m_Key: leaderboards_title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226194
+    m_Key: score_label
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226195
+    m_Key: place_label
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226196
+    m_Key: auth_prompt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226197
+    m_Key: auth_login
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226198
+    m_Key: auth_skip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226199
+    m_Key: leaderboard_empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226200
+    m_Key: your_record
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

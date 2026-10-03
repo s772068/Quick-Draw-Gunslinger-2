@@ -24,6 +24,27 @@ public static class LocalizationTables
         public const string Lose = "lose";
         public const string Continue = "continue";
         public const string Exit = "exit";
+        public const string Ready = "ready";
+        public const string FalseStart = "falsestart";
+        public const string EnemyWins = "enemywins";
+        public const string FinishSeries = "finish_series";
+        public const string ContinueSeries = "continue_series";
+        public const string RestartSeries = "restart_series";
+        public const string Yes = "yes";
+        public const string No = "no";
+        public const string AreYouSure = "are_you_sure";
+        public const string SeriesResult = "series_result";
+        public const string SureHand = "sure_hand";
+        public const string FastestHand = "fastest_hand";
+        public const string SteadyHand = "steady_hand";
+        public const string LeaderboardsTitle = "leaderboards_title";
+        public const string ScoreLabel = "score_label";
+        public const string PlaceLabel = "place_label";
+        public const string AuthPrompt = "auth_prompt";
+        public const string AuthLogin = "auth_login";
+        public const string AuthSkip = "auth_skip";
+        public const string LeaderboardEmpty = "leaderboard_empty";
+        public const string YourRecord = "your_record";
     }
 
     private static string _language = DefaultLanguage;
@@ -223,6 +244,48 @@ public static class LocalizationTables
                 return ru ? "Продолжить" : "Continue";
             case Keys.Exit:
                 return ru ? "Выйти" : "Exit";
+            case Keys.Ready:
+                return ru ? "Приготовиться!" : "Get Ready!";
+            case Keys.FalseStart:
+                return ru ? "Фальстарт!" : "False start!";
+            case Keys.EnemyWins:
+                return ru ? "Противник был быстрее" : "The enemy was faster";
+            case Keys.FinishSeries:
+                return ru ? "Завершить серию" : "Finish series";
+            case Keys.ContinueSeries:
+                return ru ? "Продолжить серию" : "Continue series";
+            case Keys.RestartSeries:
+                return ru ? "Новая серия" : "New series";
+            case Keys.Yes:
+                return ru ? "Да" : "Yes";
+            case Keys.No:
+                return ru ? "Нет" : "No";
+            case Keys.AreYouSure:
+                return ru ? "Завершить серию и записать результат?" : "Finish the series and save your result?";
+            case Keys.SeriesResult:
+                return ru ? "Серия завершена.\nВаш результат:" : "Series complete.\nYour result:";
+            case Keys.SureHand:
+                return ru ? "Твёрдая рука" : "Sure Hand";
+            case Keys.FastestHand:
+                return ru ? "Быстрая рука" : "Fastest Hand";
+            case Keys.SteadyHand:
+                return ru ? "Верная рука" : "Steady Hand";
+            case Keys.LeaderboardsTitle:
+                return ru ? "Таблицы лидеров" : "Leaderboards";
+            case Keys.ScoreLabel:
+                return ru ? "Очки:" : "Score:";
+            case Keys.PlaceLabel:
+                return ru ? "Место:" : "Place:";
+            case Keys.AuthPrompt:
+                return ru ? "Войдите, чтобы записать результат в таблицу лидеров." : "Sign in to save your result on the leaderboard.";
+            case Keys.AuthLogin:
+                return ru ? "Войти" : "Sign in";
+            case Keys.AuthSkip:
+                return ru ? "Без записи" : "Don't save";
+            case Keys.LeaderboardEmpty:
+                return ru ? "Пока нет результатов" : "No scores yet";
+            case Keys.YourRecord:
+                return ru ? "Ваш рекорд: {0}" : "Your record: {0}";
             default:
                 return key;
         }
