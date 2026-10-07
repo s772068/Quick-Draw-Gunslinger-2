@@ -85,17 +85,35 @@ public partial class RoundController : MonoBehaviour
     [SerializeField] private Sprite bellSprite1;
     [SerializeField] private Sprite bellSprite2;
 
-    [Header("Timing")]
-    [FormerlySerializedAs("signalDelaySeconds")]
-    [SerializeField] private float bellDelaySeconds = 1f;
+    [Header("Balance / Timing")]
+    [Tooltip("Random delay before the bell rings (seconds). X = min, Y = max.")]
+    [SerializeField] private Vector2 bellDelayRange = new Vector2(0.8f, 1.4f);
     [FormerlySerializedAs("crossfireMoveDuration")]
+    [Tooltip("Seconds for the crosshair to travel from start to the enemy on first aim.")]
     [SerializeField] private float aimDuration = 1f;
+    [Tooltip("Seconds for the crosshair to travel after a player miss re-pull.")]
     [SerializeField] private float aimAfterMissDuration = 0.5f;
+    [Tooltip("How far the crosshair bounces up on a player miss (UI units).")]
     [SerializeField] private float missBounceUp = 40f;
+    [Tooltip("Duration of the miss bounce-up (seconds).")]
     [SerializeField] private float missBounceDuration = 0.12f;
+    [Tooltip("Duration returning from the miss bounce to mid aim (seconds).")]
     [SerializeField] private float missToMidDuration = 0.25f;
-    [SerializeField] private Vector2 enemyShotDelayRange = new Vector2(1.4f, 2.2f);
+    [Tooltip("Enemy first-shot K floor: K = floor + span * decay^(round-1). Round 1 → 2.0s.")]
+    [SerializeField] private float enemyShotKFloor = 0.75f;
+    [Tooltip("Enemy first-shot K span multiplied by decay^(round-1).")]
+    [SerializeField] private float enemyShotKSpan = 1.75f;
+    [Tooltip("Enemy first-shot K decay per round (0.83).")]
+    [SerializeField] private float enemyShotKDecay = 0.83f;
+    [Tooltip("Enemy first-shot L floor: L = floor + span * decay^(round-1). Round 1 → 2.5s.")]
+    [SerializeField] private float enemyShotLFloor = 0.9f;
+    [Tooltip("Enemy first-shot L span multiplied by decay^(round-1).")]
+    [SerializeField] private float enemyShotLSpan = 1.6f;
+    [Tooltip("Enemy first-shot L decay per round (0.85).")]
+    [SerializeField] private float enemyShotLDecay = 0.85f;
+    [Tooltip("Delay between enemy miss and the next enemy shot (seconds). X = min, Y = max.")]
     [SerializeField] private Vector2 enemyReshotDelayRange = new Vector2(0.5f, 0.7f);
+    [Tooltip("Chance the enemy misses on a shot (0–1).")]
     [SerializeField] [Range(0f, 1f)] private float enemyMissChance = 0.25f;
 
     [Header("Crossfire Shake")]
@@ -149,6 +167,7 @@ public partial class RoundController : MonoBehaviour
     private bool _waitingForRepull;
     private bool _repullRequested;
     private bool _paused;
+    private bool _audioWarmed;
     private Coroutine _bellRoutine;
     private Coroutine _crossfireRoutine;
     private Coroutine _enemyRoutine;
@@ -204,6 +223,8 @@ public partial class RoundController : MonoBehaviour
 
         if (audioSource == null)
             audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        PreloadAudioClips();
 
         ApplyGunArt();
         EnsureAimDimOverlay();
@@ -218,6 +239,7 @@ public partial class RoundController : MonoBehaviour
         RefreshSoundVisual();
         ApplyLocalizedTexts();
         BindSeriesUi();
+        BindGdd08Ui();
         EnterWaitingToStart();
         YandexGamesSdk.GameplayStop();
     }
@@ -259,7 +281,7 @@ public partial class RoundController : MonoBehaviour
 #if !UNITY_EDITOR
         if (!hasFocus)
         {
-            if (!_paused)
+            if (ShouldOpenPauseMenuOnPlatformPause())
                 OpenPauseMenu();
         }
         else if (!GamePauseGate.IsUserPaused)
@@ -275,13 +297,19 @@ public partial class RoundController : MonoBehaviour
         // Platform pause freezes input via Update gate; menu state stays as-is.
         if (YandexGamesSdk.PlatformPaused)
         {
-            if (!_paused)
+            if (ShouldOpenPauseMenuOnPlatformPause())
                 OpenPauseMenu();
             else
                 SetGameplayHudInteractable(false);
         }
         else if (!_paused)
+        {
+            // Ads call SetGameplayHudInteractable(false) while RoundFinish/Summary are open;
+            // Reassert alone only restores D/P/F — re-enable panel buttons too.
+            SetGameplayHudInteractable(true);
             ReassertActionInteractable();
+            RefreshMenuButtonInteractable();
+        }
     }
 
     private void ApplyLocalizedTexts()
@@ -527,12 +555,7 @@ public partial class RoundController : MonoBehaviour
 
     private void ApplyHintVisibility()
     {
-        bool show = !Input.touchSupported;
-        for (int i = 0; i < _hintObjects.Count; i++)
-        {
-            if (_hintObjects[i] != null)
-                _hintObjects[i].SetActive(show);
-        }
+        StyleKeyboardHints();
     }
 
     private void EnsureOrientationControls()
@@ -912,6 +935,8 @@ public partial class RoundController : MonoBehaviour
         SetIndicatorVisual(drawButton, ActionVisualState.Inactive);
         SetIndicatorVisual(pullButton, ActionVisualState.Inactive);
         SetIndicatorVisual(fireButton, ActionVisualState.Inactive);
+        ClearEnemyShotDelayDebug();
+        RefreshMenuButtonInteractable();
     }
 
     private void OnStartClicked()
@@ -919,27 +944,37 @@ public partial class RoundController : MonoBehaviour
         if (_paused || YandexGamesSdk.PlatformPaused || _phase != Phase.WaitingToStart)
             return;
 
+        // User gesture unlocks WebGL AudioContext; warm clips before the first bell.
+        WarmUpAudio();
+
         BeginSeriesIfNeeded();
         SetPanelActive(roundStartPanel, false);
         _phase = Phase.WaitingForBell;
         SetActionState(_drawActions, ActionVisualState.Active);
         SetIndicatorVisual(drawButton, ActionVisualState.Active);
+        ClearEnemyShotDelayDebug();
+        RefreshMenuButtonInteractable();
         YandexGamesSdk.GameplayStart();
         _bellRoutine = StartCoroutine(BellCountdown());
     }
 
     private IEnumerator BellCountdown()
     {
-        yield return new WaitForSeconds(bellDelaySeconds);
+        yield return new WaitForSeconds(RollBellDelay());
 
         if (_phase != Phase.WaitingForBell)
             yield break;
 
+        // WebGL: ensure listener is live before icon+sfx (ads may have paused it).
+        AudioListener.pause = false;
+        WarmUpAudio();
+
         _bellFired = true;
         _phase = Phase.BellShown;
         MarkDuelTimer();
-        SetBellState(fired: true);
+        // Kick audio first, then flip the icon so they stay aligned on slow WebGL.
         PlaySfx(sfxBell);
+        SetBellState(fired: true);
         _enemyRoutine = StartCoroutine(EnemyShootLoop());
     }
 
@@ -1066,15 +1101,14 @@ public partial class RoundController : MonoBehaviour
             pauseMenuRoot.transform.SetAsLastSibling();
         SetPanelActive(pauseMenuRoot, true);
 
-        // Keep TopPanel Menu/Sound usable; PauseMenu buttons usable.
-        if (menuButton != null)
-            menuButton.interactable = true;
+        // Keep Sound + PauseMenu buttons usable; Menu follows duel state.
         if (soundButton != null)
             soundButton.interactable = true;
         if (pauseContinueButton != null)
             pauseContinueButton.interactable = true;
         if (pauseExitButton != null)
             pauseExitButton.interactable = true;
+        RefreshMenuButtonInteractable();
     }
 
     private void ClosePauseMenu()
@@ -1094,6 +1128,7 @@ public partial class RoundController : MonoBehaviour
 
         // Re-apply action interactable states for current phase visuals.
         ReassertActionInteractable();
+        RefreshMenuButtonInteractable();
     }
 
     private void SetGameplayHudInteractable(bool interactable)
@@ -1190,6 +1225,16 @@ public partial class RoundController : MonoBehaviour
                 SetActionState(_fireActions, ActionVisualState.Inactive);
                 if (restartButton != null)
                     restartButton.interactable = true;
+                SetChildButtonInteractable(roundFinishPanel, "FinishSeriesBtn", true);
+                SetChildButtonInteractable(roundFinishPanel, "ContinueSeriesBtn", true);
+                SetChildButtonInteractable(roundFinishPanel, "RestartSeriesBtn", true);
+                SetChildButtonInteractable(roundFinishPanel, "ExitBtn", true);
+                SetChildButtonInteractable(_seriesSummary, "RestartSeriesBtn", true);
+                SetChildButtonInteractable(_seriesSummary, "ExitBtn", true);
+                SetChildButtonInteractable(_areYouSure, "Yes", true);
+                SetChildButtonInteractable(_areYouSure, "No", true);
+                SetChildButtonInteractable(_authPrompt, "LoginBtn", true);
+                SetChildButtonInteractable(_authPrompt, "SkipBtn", true);
                 break;
         }
     }
@@ -1227,6 +1272,8 @@ public partial class RoundController : MonoBehaviour
 
         YandexGamesSdk.GameplayStop();
         PresentRoundFinish(outcome);
+        RefreshMenuButtonInteractable();
+        NoteRoundFinishedForAds();
     }
 
     private void BeginMissRecovery()
@@ -1361,7 +1408,9 @@ public partial class RoundController : MonoBehaviour
 
     private IEnumerator EnemyShootLoop()
     {
-        float delay = Random.Range(enemyShotDelayRange.x, enemyShotDelayRange.y);
+        float delay = RollEnemyShotDelayForCurrentRound();
+        // Persist the rolled delay even if the player wins before the enemy fires.
+        WriteEnemyShotDelayDebug(delay);
         yield return new WaitForSeconds(delay);
 
         while (_phase != Phase.Finished)
@@ -1373,6 +1422,7 @@ public partial class RoundController : MonoBehaviour
             if (enemyMissed)
             {
                 PlaySfx(sfxMissEnemy);
+                ShowEnemyMissMessage();
                 float reshot = Random.Range(enemyReshotDelayRange.x, enemyReshotDelayRange.y);
                 yield return new WaitForSeconds(reshot);
                 continue;
@@ -1530,12 +1580,61 @@ public partial class RoundController : MonoBehaviour
         }
     }
 
+    private AudioClip[] AllSfxClips()
+    {
+        return new[]
+        {
+            sfxEagle, sfxBell, sfxDraw, sfxGunPull, sfxPlayerShot,
+            sfxEnemyShot, sfxEnemyDie, sfxPlayerHit, sfxMissPlayer, sfxMissEnemy
+        };
+    }
+
+    private void PreloadAudioClips()
+    {
+        AudioClip[] clips = AllSfxClips();
+        for (int i = 0; i < clips.Length; i++)
+        {
+            AudioClip clip = clips[i];
+            if (clip == null)
+                continue;
+            if (clip.loadState == AudioDataLoadState.Unloaded)
+                clip.LoadAudioData();
+        }
+    }
+
+    /// <summary>
+    /// WebGL often delays the first PlayOneShot of a clip (~0.5s). Silent warm-up after a
+    /// user gesture makes the first real bell land with the icon.
+    /// </summary>
+    private void WarmUpAudio()
+    {
+        if (_audioWarmed || audioSource == null)
+            return;
+
+        AudioListener.pause = false;
+        AudioClip[] clips = AllSfxClips();
+        for (int i = 0; i < clips.Length; i++)
+        {
+            AudioClip clip = clips[i];
+            if (clip == null)
+                continue;
+            if (clip.loadState == AudioDataLoadState.Unloaded)
+                clip.LoadAudioData();
+            audioSource.PlayOneShot(clip, 0f);
+        }
+
+        _audioWarmed = true;
+    }
+
     private void PlaySfx(AudioClip clip)
     {
         if (!GameAudioSettings.SoundEnabled)
             return;
         if (audioSource == null || clip == null)
             return;
+        if (GameAudioSettings.PlatformMuted)
+            return;
+        AudioListener.pause = false;
         audioSource.PlayOneShot(clip);
     }
 

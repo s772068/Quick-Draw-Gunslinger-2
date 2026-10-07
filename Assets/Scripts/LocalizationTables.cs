@@ -37,6 +37,9 @@ public static class LocalizationTables
         public const string SureHand = "sure_hand";
         public const string FastestHand = "fastest_hand";
         public const string SteadyHand = "steady_hand";
+        public const string SureHandDesc = "sure_hand_desc";
+        public const string FastestHandDesc = "fastest_hand_desc";
+        public const string SteadyHandDesc = "steady_hand_desc";
         public const string LeaderboardsTitle = "leaderboards_title";
         public const string ScoreLabel = "score_label";
         public const string PlaceLabel = "place_label";
@@ -45,6 +48,7 @@ public static class LocalizationTables
         public const string AuthSkip = "auth_skip";
         public const string LeaderboardEmpty = "leaderboard_empty";
         public const string YourRecord = "your_record";
+        public const string EnemyMiss = "enemy_miss";
     }
 
     private static string _language = DefaultLanguage;
@@ -270,6 +274,12 @@ public static class LocalizationTables
                 return ru ? "Быстрая рука" : "Fastest Hand";
             case Keys.SteadyHand:
                 return ru ? "Верная рука" : "Steady Hand";
+            case Keys.SureHandDesc:
+                return ru ? "Самая продолжительная серия побед" : "Longest win streak";
+            case Keys.FastestHandDesc:
+                return ru ? "Лучший результат в одном раунде" : "Best single-round time";
+            case Keys.SteadyHandDesc:
+                return ru ? "Средний результат за последние 10 побед в одной серии" : "Average of the last 10 wins in one series";
             case Keys.LeaderboardsTitle:
                 return ru ? "Таблицы лидеров" : "Leaderboards";
             case Keys.ScoreLabel:
@@ -286,6 +296,8 @@ public static class LocalizationTables
                 return ru ? "Пока нет результатов" : "No scores yet";
             case Keys.YourRecord:
                 return ru ? "Ваш рекорд: {0}" : "Your record: {0}";
+            case Keys.EnemyMiss:
+                return ru ? "Противник промахнулся!" : "Enemy Miss";
             default:
                 return key;
         }

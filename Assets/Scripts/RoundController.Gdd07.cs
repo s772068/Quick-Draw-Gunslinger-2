@@ -93,6 +93,7 @@ public partial class RoundController
         RefreshCounters();
         SceneTextLocalizer.Apply();
         RefreshOutcomeTexts();
+        RefreshMenuButtonInteractable();
     }
 
     private void RefreshOutcomeTexts()
@@ -181,11 +182,13 @@ public partial class RoundController
         if (_areYouSure != null)
             _areYouSure.transform.SetAsLastSibling();
         SetPanelActive(_authPrompt, false);
+        RefreshMenuButtonInteractable();
     }
 
     private void OnNoClicked()
     {
         SetPanelActive(_areYouSure, false);
+        RefreshMenuButtonInteractable();
     }
 
     private void OnYesClicked()
@@ -244,16 +247,24 @@ public partial class RoundController
 
     private void ShowAuthPrompt()
     {
+        _submitting = false;
         SetPanelActive(_areYouSure, false);
         SetPanelActive(_authPrompt, true);
         if (_authPrompt != null)
             _authPrompt.transform.SetAsLastSibling();
         SceneTextLocalizer.Apply();
+        RefreshMenuButtonInteractable();
     }
 
     private void CommitAndShowSummary(bool sendToYandex)
     {
         _submitting = true;
+        // GDD 0.8: interstitial on confirmed finish-series (SDK only; frequency gated by Yandex).
+        ShowFinishSeriesAdThen(() => CommitAndShowSummaryAfterAd(sendToYandex));
+    }
+
+    private void CommitAndShowSummaryAfterAd(bool sendToYandex)
+    {
         PersonalRecords.Commit(_series);
         SetPanelActive(roundFinishPanel, false);
         SetPanelActive(_areYouSure, false);
@@ -263,6 +274,9 @@ public partial class RoundController
             _seriesSummary.transform.SetAsLastSibling();
 
         RefreshCounters();
+        SetChildButtonInteractable(_seriesSummary, "RestartSeriesBtn", true);
+        SetChildButtonInteractable(_seriesSummary, "ExitBtn", true);
+        RefreshMenuButtonInteractable();
         SetChildText(_seriesSummary, "SeriesResultText", LocalizationTables.Get(LocalizationTables.Keys.SeriesResult));
         SceneTextLocalizer.Apply();
         SetChildText(_seriesSummary, "SeriesResultText", LocalizationTables.Get(LocalizationTables.Keys.SeriesResult));

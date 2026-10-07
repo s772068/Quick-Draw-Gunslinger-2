@@ -38,6 +38,9 @@ public static class Gdd05LocalizationSetup
         ("sure_hand", "Sure Hand", "Твёрдая рука"),
         ("fastest_hand", "Fastest Hand", "Быстрая рука"),
         ("steady_hand", "Steady Hand", "Верная рука"),
+        ("sure_hand_desc", "Longest win streak", "Самая продолжительная серия побед"),
+        ("fastest_hand_desc", "Best single-round time", "Лучший результат в одном раунде"),
+        ("steady_hand_desc", "Average of the last 10 wins in one series", "Средний результат за последние 10 побед в одной серии"),
         ("leaderboards_title", "Leaderboards", "Таблицы лидеров"),
         ("score_label", "Score:", "Очки:"),
         ("place_label", "Place:", "Место:"),
@@ -46,6 +49,7 @@ public static class Gdd05LocalizationSetup
         ("auth_skip", "Don't save", "Без записи"),
         ("leaderboard_empty", "No scores yet", "Пока нет результатов"),
         ("your_record", "Your record: {0}", "Ваш рекорд: {0}"),
+        ("enemy_miss", "Enemy Miss", "Противник промахнулся!"),
     };
 
     [MenuItem("QDG2/Setup Unity Localization Tables")]

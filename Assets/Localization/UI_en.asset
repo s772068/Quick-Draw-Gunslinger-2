@@ -144,6 +144,22 @@ MonoBehaviour:
     m_Localized: 'Your record: {0}'
     m_Metadata:
       m_Items: []
+  - m_Id: 674226201
+    m_Localized: Longest win streak
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226202
+    m_Localized: Best single-round time
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226203
+    m_Localized: Average of the last 10 wins in one series
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226204
+    m_Localized: Enemy Miss
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -5,8 +5,8 @@ using System.Text;
 using UnityEngine;
 
 /// <summary>
-/// Yandex Games SDK bridge (GDD 0.5): lang, LoadingAPI, GameplayAPI, pause/resume.
-/// Ads are not shown yet; pause hooks are ready for future interstitial/rewarded.
+/// Yandex Games SDK bridge (GDD 0.5/0.8): lang, LoadingAPI, GameplayAPI, pause/resume, fullscreen ads.
+/// Startup interstitial is shown by the platform; handle it via game_api_pause/resume only.
 /// </summary>
 [DefaultExecutionOrder(-1000)]
 public class YandexGamesSdk : MonoBehaviour
@@ -28,11 +28,14 @@ public class YandexGamesSdk : MonoBehaviour
     [DllImport("__Internal")] private static extern void YandexGames_GameplayStart();
     [DllImport("__Internal")] private static extern void YandexGames_GameplayStop();
     [DllImport("__Internal")] private static extern void YandexGames_BindUnityTarget(string gameObject, string pauseMethod, string resumeMethod);
+    [DllImport("__Internal")] private static extern void YandexGames_ShowFullscreenAdv(string gameObject, string openMethod, string closeMethod, string errorMethod);
 #endif
 
     private bool _gameplayActive;
     private bool _loadingReadySent;
     private bool _resumeGameplayAfterPlatformPause;
+    private bool _advInFlight;
+    private Action<bool> _advClosed;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void EnsureExists()
@@ -141,6 +144,96 @@ public class YandexGamesSdk : MonoBehaviour
         if (Instance == null)
             return;
         Instance.InternalGameplayStop();
+    }
+
+    /// <summary>
+    /// Fullscreen interstitial via ysdk.adv.showFullscreenAdv.
+    /// Frequency is enforced by Yandex; onClose may report wasShown=false.
+    /// </summary>
+    public static void ShowFullscreenAdv(Action<bool> onClosed = null)
+    {
+        if (Instance == null)
+        {
+            onClosed?.Invoke(false);
+            return;
+        }
+
+        Instance.InternalShowFullscreenAdv(onClosed);
+    }
+
+    private void InternalShowFullscreenAdv(Action<bool> onClosed)
+    {
+        if (_advInFlight)
+        {
+            onClosed?.Invoke(false);
+            return;
+        }
+
+        _advInFlight = true;
+        _advClosed = onClosed;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        if (!SdkAvailable)
+        {
+            FinishAdv(false);
+            return;
+        }
+
+        try
+        {
+            YandexGames_ShowFullscreenAdv(
+                gameObject.name,
+                nameof(OnFullscreenAdvOpen),
+                nameof(OnFullscreenAdvClose),
+                nameof(OnFullscreenAdvError));
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("ShowFullscreenAdv failed: " + e.Message);
+            FinishAdv(false);
+        }
+#else
+        Debug.Log("[Yandex] showFullscreenAdv() skipped (editor/non-WebGL)");
+        StartCoroutine(FinishAdvNextFrame(false));
+#endif
+    }
+
+    private IEnumerator FinishAdvNextFrame(bool wasShown)
+    {
+        yield return null;
+        FinishAdv(wasShown);
+    }
+
+    /// <summary>JS SendMessage callback.</summary>
+    public void OnFullscreenAdvOpen(string _)
+    {
+        // Platform also fires game_api_pause; keep audio/time gated there.
+        Debug.Log("[Yandex] fullscreen adv open");
+    }
+
+    /// <summary>JS SendMessage callback. Payload "1" / "0".</summary>
+    public void OnFullscreenAdvClose(string payload)
+    {
+        bool wasShown = payload == "1";
+        FinishAdv(wasShown);
+    }
+
+    /// <summary>JS SendMessage callback.</summary>
+    public void OnFullscreenAdvError(string message)
+    {
+        Debug.LogWarning("[Yandex] fullscreen adv error: " + message);
+        FinishAdv(false);
+    }
+
+    private void FinishAdv(bool wasShown)
+    {
+        if (!_advInFlight)
+            return;
+
+        _advInFlight = false;
+        Action<bool> cb = _advClosed;
+        _advClosed = null;
+        cb?.Invoke(wasShown);
     }
 
     private void InternalGameplayStart()

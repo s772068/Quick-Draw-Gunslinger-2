@@ -135,6 +135,22 @@ MonoBehaviour:
     m_Key: your_record
     m_Metadata:
       m_Items: []
+  - m_Id: 674226201
+    m_Key: sure_hand_desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226202
+    m_Key: fastest_hand_desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226203
+    m_Key: steady_hand_desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226204
+    m_Key: enemy_miss
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

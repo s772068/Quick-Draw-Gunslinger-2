@@ -43,6 +43,8 @@ public class MainMenuController : MonoBehaviour
         var boards = GameObject.Find("LeaderboardsPanel");
         if (boards != null && boards.GetComponent<MenuLeaderboardPanel>() == null)
             boards.AddComponent<MenuLeaderboardPanel>();
+        if (GetComponent<MainMenuLayout>() == null)
+            gameObject.AddComponent<MainMenuLayout>();
         YandexGamesSdk.GameplayStop();
     }
 

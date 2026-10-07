@@ -16,6 +16,7 @@ public class MenuLeaderboardPanel : MonoBehaviour
     private LeaderboardKind _kind = LeaderboardKind.Sure;
     private RectTransform _list;
     private TMP_Text _title;
+    private TMP_Text _subTitle;
     private TMP_Text _localBest;
     private TMP_Text _empty;
     private Image _sureIcon;
@@ -24,6 +25,10 @@ public class MenuLeaderboardPanel : MonoBehaviour
     private Sprite _rowSprite;
     private TMP_FontAsset _font;
     private readonly List<GameObject> _liveRows = new List<GameObject>();
+    private readonly Dictionary<LeaderboardKind, YandexLeaderboards.BoardPage> _cache =
+        new Dictionary<LeaderboardKind, YandexLeaderboards.BoardPage>();
+    private bool _prefetchStarted;
+    private Coroutine _prefetchRoutine;
 
     private void OnEnable()
     {
@@ -39,6 +44,11 @@ public class MenuLeaderboardPanel : MonoBehaviour
     private void OnDisable()
     {
         LocalizationTables.LanguageChanged -= OnLanguage;
+        if (_prefetchRoutine != null)
+        {
+            StopCoroutine(_prefetchRoutine);
+            _prefetchRoutine = null;
+        }
     }
 
     private void OnLanguage()
@@ -46,7 +56,7 @@ public class MenuLeaderboardPanel : MonoBehaviour
         ApplyStaticTexts();
         ApplySelectionVisual();
         if (Application.isPlaying)
-            StartCoroutine(RefreshWhenReady());
+            ShowCached(_kind);
     }
 
     private IEnumerator RefreshWhenReady()
@@ -60,13 +70,75 @@ public class MenuLeaderboardPanel : MonoBehaviour
         }
 
         ApplyStaticTexts();
-        LoadSelected();
+        if (_cache.ContainsKey(_kind))
+            ShowCached(_kind);
+        else
+            ShowEmptyPlaceholder();
+
+        if (!_prefetchStarted)
+        {
+            _prefetchStarted = true;
+            _prefetchRoutine = StartCoroutine(PrefetchAllBoards());
+        }
+    }
+
+    private IEnumerator PrefetchAllBoards()
+    {
+        LeaderboardKind[] kinds =
+        {
+            LeaderboardKind.Sure,
+            LeaderboardKind.Fastest,
+            LeaderboardKind.Steady
+        };
+
+        for (int i = 0; i < kinds.Length; i++)
+        {
+            LeaderboardKind kind = kinds[i];
+            if (_cache.ContainsKey(kind))
+                continue;
+
+            if (YandexLeaderboards.Instance == null)
+            {
+                _cache[kind] = new YandexLeaderboards.BoardPage(false, 0, null);
+                continue;
+            }
+
+            bool done = false;
+            YandexLeaderboards.BoardPage page = default;
+            YandexLeaderboards.Instance.Load(kind, result =>
+            {
+                page = result;
+                done = true;
+            });
+
+            float wait = 0f;
+            while (!done && wait < 8f)
+            {
+                wait += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            if (!done)
+                page = new YandexLeaderboards.BoardPage(false, 0, null);
+
+            _cache[kind] = page;
+
+            if (kind == _kind)
+                ShowCached(kind);
+
+            // Stay under Yandex getEntries rate limit when requesting all three boards.
+            if (i < kinds.Length - 1)
+                yield return new WaitForSecondsRealtime(0.35f);
+        }
+
+        _prefetchRoutine = null;
     }
 
     public void EnsureScaffold()
     {
         CacheFonts();
         _title = FindLabel("BoardLabel");
+        _subTitle = FindLabel("BoardSubLabel");
 
         Transform existing = transform.Find("BoardList");
         if (existing == null)
@@ -169,10 +241,16 @@ public class MenuLeaderboardPanel : MonoBehaviour
 
     private void Select(LeaderboardKind kind)
     {
+        if (_kind == kind)
+            return;
+
         _kind = kind;
         ApplySelectionVisual();
-        if (Application.isPlaying)
-            LoadSelected();
+        if (!Application.isPlaying)
+            return;
+
+        ApplyStaticTexts();
+        ShowCached(kind);
     }
 
     private void ApplySelectionVisual()
@@ -183,8 +261,12 @@ public class MenuLeaderboardPanel : MonoBehaviour
 
         if (_title == null)
             _title = FindLabel("BoardLabel");
+        if (_subTitle == null)
+            _subTitle = FindLabel("BoardSubLabel");
         if (_title != null)
             _title.text = Title(_kind);
+        if (_subTitle != null)
+            _subTitle.text = SubTitle(_kind);
     }
 
     private static void Tint(Image image, bool selected)
@@ -194,9 +276,23 @@ public class MenuLeaderboardPanel : MonoBehaviour
         image.color = selected ? Color.white : new Color(1f, 1f, 1f, 0.4f);
     }
 
-    private void LoadSelected()
+    private void ShowCached(LeaderboardKind kind)
     {
         ApplyStaticTexts();
+        ClearLiveRows();
+        ShowSamples(false);
+
+        if (!_cache.TryGetValue(kind, out YandexLeaderboards.BoardPage page))
+        {
+            ShowEmptyPlaceholder();
+            return;
+        }
+
+        RenderPage(page);
+    }
+
+    private void ShowEmptyPlaceholder()
+    {
         ClearLiveRows();
         ShowSamples(false);
         if (_empty != null)
@@ -204,20 +300,18 @@ public class MenuLeaderboardPanel : MonoBehaviour
             _empty.gameObject.SetActive(true);
             _empty.text = LocalizationTables.Get(LocalizationTables.Keys.LeaderboardEmpty);
         }
-
-        if (YandexLeaderboards.Instance == null)
-            return;
-
-        YandexLeaderboards.Instance.Load(_kind, OnPage);
     }
 
-    private void OnPage(YandexLeaderboards.BoardPage page)
+    private void RenderPage(YandexLeaderboards.BoardPage page)
     {
         ClearLiveRows();
         if (!page.Ok || page.Entries == null || page.Entries.Length == 0)
         {
             if (_empty != null)
+            {
                 _empty.gameObject.SetActive(true);
+                _empty.text = LocalizationTables.Get(LocalizationTables.Keys.LeaderboardEmpty);
+            }
             return;
         }
 
@@ -315,6 +409,8 @@ public class MenuLeaderboardPanel : MonoBehaviour
 
         if (_title != null)
             _title.text = Title(_kind);
+        if (_subTitle != null)
+            _subTitle.text = SubTitle(_kind);
     }
 
     private static string Title(LeaderboardKind kind)
@@ -324,6 +420,16 @@ public class MenuLeaderboardPanel : MonoBehaviour
             case LeaderboardKind.Fastest: return LocalizationTables.Get(LocalizationTables.Keys.FastestHand);
             case LeaderboardKind.Steady: return LocalizationTables.Get(LocalizationTables.Keys.SteadyHand);
             default: return LocalizationTables.Get(LocalizationTables.Keys.SureHand);
+        }
+    }
+
+    private static string SubTitle(LeaderboardKind kind)
+    {
+        switch (kind)
+        {
+            case LeaderboardKind.Fastest: return LocalizationTables.Get(LocalizationTables.Keys.FastestHandDesc);
+            case LeaderboardKind.Steady: return LocalizationTables.Get(LocalizationTables.Keys.SteadyHandDesc);
+            default: return LocalizationTables.Get(LocalizationTables.Keys.SureHandDesc);
         }
     }
 

@@ -135,6 +135,40 @@ var YandexGamesLib = {
         });
     },
 
+    YandexGames_ShowFullscreenAdv: function (gameObjectPtr, openPtr, closePtr, errorPtr) {
+        var go = UTF8ToString(gameObjectPtr);
+        var openMethod = UTF8ToString(openPtr);
+        var closeMethod = UTF8ToString(closePtr);
+        var errorMethod = UTF8ToString(errorPtr);
+        var ysdk = (typeof window !== "undefined") ? window.ysdk : null;
+        if (!ysdk || !ysdk.adv || typeof ysdk.adv.showFullscreenAdv !== "function") {
+            SendMessage(go, closeMethod, "0");
+            return;
+        }
+
+        try {
+            ysdk.adv.showFullscreenAdv({
+                callbacks: {
+                    onOpen: function () {
+                        if (typeof SendMessage === "function")
+                            SendMessage(go, openMethod, "");
+                    },
+                    onClose: function (wasShown) {
+                        if (typeof SendMessage === "function")
+                            SendMessage(go, closeMethod, wasShown ? "1" : "0");
+                    },
+                    onError: function (e) {
+                        if (typeof SendMessage === "function")
+                            SendMessage(go, errorMethod, e && e.message ? String(e.message) : "adv error");
+                    }
+                }
+            });
+        } catch (e) {
+            console.warn("Yandex showFullscreenAdv failed", e);
+            SendMessage(go, closeMethod, "0");
+        }
+    },
+
     YandexGames_LoadEntries: function (boardPtr, gameObjectPtr, methodPtr) {
         var board = UTF8ToString(boardPtr);
         var go = UTF8ToString(gameObjectPtr);
