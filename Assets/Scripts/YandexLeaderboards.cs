@@ -5,14 +5,14 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 
 /// <summary>
-/// Yandex leaderboard bridge. Technical names stay on the *temp boards until 1.0.
+/// Yandex leaderboard bridge.
 /// setScore is limited to one call per second.
 /// </summary>
 public class YandexLeaderboards : MonoBehaviour
 {
-    public const string SureBoard = "surehandtemp";
-    public const string FastestBoard = "fastesthandtemp";
-    public const string SteadyBoard = "steadyhandtemp";
+    public const string SureBoard = "surehand";
+    public const string FastestBoard = "fastesthand";
+    public const string SteadyBoard = "steadyhand";
 
     public static YandexLeaderboards Instance { get; private set; }
 

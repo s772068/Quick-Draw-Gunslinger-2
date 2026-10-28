@@ -38,6 +38,7 @@ public partial class RoundController
         }
         HideSeriesOverlays();
 
+        WireChild(roundStartPanel, "ExitBtn", OnPauseExitClicked);
         WireChild(roundFinishPanel, "FinishSeriesBtn", OnFinishSeriesClicked);
         WireChild(roundFinishPanel, "ContinueSeriesBtn", OnContinueSeriesClicked);
         WireChild(roundFinishPanel, "RestartSeriesBtn", OnRestartSeriesClicked);
