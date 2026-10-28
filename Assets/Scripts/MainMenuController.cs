@@ -45,7 +45,29 @@ public class MainMenuController : MonoBehaviour
             boards.AddComponent<MenuLeaderboardPanel>();
         if (GetComponent<MainMenuLayout>() == null)
             gameObject.AddComponent<MainMenuLayout>();
+        EnsureSafeAreaPadding();
         YandexGamesSdk.GameplayStop();
+    }
+
+    private static void EnsureSafeAreaPadding()
+    {
+        Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+        if (canvas == null)
+            return;
+
+        // Prefer a full-stretch root under Canvas (HUD / SafeArea / Canvas itself).
+        Transform root = canvas.transform.Find("HUD");
+        if (root == null)
+            root = canvas.transform.Find("SafeArea");
+        if (root == null)
+            root = canvas.transform;
+
+        var rt = root as RectTransform;
+        if (rt == null)
+            return;
+
+        if (root.GetComponent<SafeAreaPadding>() == null)
+            root.gameObject.AddComponent<SafeAreaPadding>();
     }
 
     private void OnEnable()

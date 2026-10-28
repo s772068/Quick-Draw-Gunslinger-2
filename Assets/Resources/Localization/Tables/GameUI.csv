@@ -28,3 +28,5 @@ auth_login,Sign in,Войти
 auth_skip,Don't save,Без записи
 leaderboard_empty,No scores yet,Пока нет результатов
 your_record,Your record: {0},Ваш рекорд: {0}
+nickname_placeholder,Nickname (2–16),Ник (2–16)
+submit_score,Submit,Отправить

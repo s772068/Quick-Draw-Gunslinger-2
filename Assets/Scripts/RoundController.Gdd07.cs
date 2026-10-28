@@ -21,6 +21,8 @@ public partial class RoundController
     private GameObject _seriesSummary;
     private GameObject _areYouSure;
     private GameObject _authPrompt;
+    private TMP_InputField _nicknameInput;
+    private Button _httpSubmitBtn;
 
     private void BindSeriesUi()
     {
@@ -36,6 +38,7 @@ public partial class RoundController
                     _seriesSummary = summary.gameObject;
             }
         }
+        CacheNicknameUi();
         HideSeriesOverlays();
 
         WireChild(roundStartPanel, "ExitBtn", OnPauseExitClicked);
@@ -49,7 +52,24 @@ public partial class RoundController
         WireChild(_authPrompt, "SkipBtn", OnSkipSaveClicked);
         WireChild(_seriesSummary, "RestartSeriesBtn", OnRestartSeriesClicked);
         WireChild(_seriesSummary, "ExitBtn", OnPauseExitClicked);
+        WireChild(_seriesSummary, "SubmitBtn", OnHttpSubmitClicked);
         RefreshCounters();
+    }
+
+    private void CacheNicknameUi()
+    {
+        _nicknameInput = null;
+        _httpSubmitBtn = null;
+        if (_seriesSummary == null)
+            return;
+
+        Transform input = _seriesSummary.transform.Find("InputNickname");
+        if (input != null)
+            _nicknameInput = input.GetComponent<TMP_InputField>();
+
+        Transform submit = _seriesSummary.transform.Find("SubmitBtn");
+        if (submit != null)
+            _httpSubmitBtn = submit.GetComponent<Button>();
     }
 
     private void BeginSeriesIfNeeded()
@@ -199,16 +219,13 @@ public partial class RoundController
 
         SetPanelActive(_areYouSure, false);
 
-#if UNITY_EDITOR
-        CommitAndShowSummary(sendToYandex: false);
-#else
-        if (!YandexGamesSdk.SdkAvailable)
+        if (PlatformLeaderboards.UseHttp)
         {
             CommitAndShowSummary(sendToYandex: false);
             return;
         }
 
-        if (YandexLeaderboards.Instance == null)
+        if (!YandexGamesSdk.SdkAvailable || YandexLeaderboards.Instance == null)
         {
             CommitAndShowSummary(sendToYandex: false);
             return;
@@ -221,7 +238,26 @@ public partial class RoundController
             else
                 ShowAuthPrompt();
         });
-#endif
+    }
+
+    private void OnHttpSubmitClicked()
+    {
+        if (_submitting || !PlatformLeaderboards.UseHttp)
+            return;
+
+        string nick = _nicknameInput != null ? _nicknameInput.text : PlayerIdentity.Nickname;
+        nick = PlayerIdentity.SanitizeName(nick);
+        if (string.IsNullOrEmpty(nick))
+        {
+            Debug.LogWarning("Nickname required (2–16 chars)");
+            return;
+        }
+
+        PlayerIdentity.Nickname = nick;
+        if (_nicknameInput != null)
+            _nicknameInput.text = nick;
+
+        StartCoroutine(SubmitSeriesHttp(nick));
     }
 
     private void OnLoginClicked()
@@ -282,18 +318,47 @@ public partial class RoundController
         SceneTextLocalizer.Apply();
         SetChildText(_seriesSummary, "SeriesResultText", LocalizationTables.Get(LocalizationTables.Keys.SeriesResult));
 
-        bool editorPlaces = sendToYandex == false;
-        SetPlace("SurePlace", _series.Wins > 0, editorPlaces);
-        SetPlace("FastestPlace", _series.TryBestSeconds(out _), editorPlaces);
-        SetPlace("SteadyPlace", _series.TrySteadySeconds(out _), editorPlaces);
+        bool httpPath = !sendToYandex && PlatformLeaderboards.UseHttp;
+        PrepareNicknameUi(httpPath);
+
+        SetPlace("SurePlace", _series.Wins > 0, false);
+        SetPlace("FastestPlace", _series.TryBestSeconds(out _), false);
+        SetPlace("SteadyPlace", _series.TrySteadySeconds(out _), false);
 
         if (sendToYandex)
-            StartCoroutine(SubmitSeries());
+            StartCoroutine(SubmitSeriesYandex());
         else
             _submitting = false;
     }
 
-    private IEnumerator SubmitSeries()
+    private void PrepareNicknameUi(bool showHttpSubmit)
+    {
+        CacheNicknameUi();
+        SetChildActive(_seriesSummary, "InputNickname", showHttpSubmit);
+        SetChildActive(_seriesSummary, "SubmitBtn", showHttpSubmit);
+
+        if (!showHttpSubmit)
+            return;
+
+        if (_nicknameInput != null)
+        {
+            _nicknameInput.characterLimit = 16;
+            if (PlayerIdentity.HasNickname)
+                _nicknameInput.text = PlayerIdentity.Nickname;
+            if (_nicknameInput.placeholder is TMP_Text ph)
+                ph.text = LocalizationTables.Get(LocalizationTables.Keys.NicknamePlaceholder);
+        }
+
+        if (_httpSubmitBtn != null)
+        {
+            _httpSubmitBtn.interactable = true;
+            var label = _httpSubmitBtn.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+                label.text = LocalizationTables.Get(LocalizationTables.Keys.SubmitScore);
+        }
+    }
+
+    private IEnumerator SubmitSeriesYandex()
     {
         if (YandexLeaderboards.Instance == null)
         {
@@ -319,6 +384,32 @@ public partial class RoundController
         _submitting = false;
     }
 
+    private IEnumerator SubmitSeriesHttp(string nick)
+    {
+        _submitting = true;
+        if (_httpSubmitBtn != null)
+            _httpSubmitBtn.interactable = false;
+
+        if (_series.Wins > 0)
+            yield return PlatformLeaderboards.Submit(PlatformLeaderboards.SureBoard, _series.Wins, nick);
+
+        if (_series.TryBestSeconds(out float best))
+            yield return PlatformLeaderboards.Submit(PlatformLeaderboards.FastestBoard, SeriesRun.ToMilliseconds(best), nick);
+
+        if (_series.TrySteadySeconds(out float steady))
+            yield return PlatformLeaderboards.Submit(PlatformLeaderboards.SteadyBoard, SeriesRun.ToMilliseconds(steady), nick);
+
+        yield return FillPlace(PlatformLeaderboards.SureBoard, "SurePlace", _series.Wins > 0);
+        if (_series.TryBestSeconds(out _))
+            yield return FillPlace(PlatformLeaderboards.FastestBoard, "FastestPlace", true);
+        if (_series.TrySteadySeconds(out _))
+            yield return FillPlace(PlatformLeaderboards.SteadyBoard, "SteadyPlace", true);
+
+        if (_httpSubmitBtn != null)
+            _httpSubmitBtn.interactable = true;
+        _submitting = false;
+    }
+
     private IEnumerator FillPlace(string board, string objectName, bool hasScore)
     {
         if (!hasScore)
@@ -329,7 +420,7 @@ public partial class RoundController
 
         int rank = 0;
         bool done = false;
-        YandexLeaderboards.Instance.LoadRank(board, value =>
+        PlatformLeaderboards.LoadRank(board, value =>
         {
             rank = value;
             done = true;

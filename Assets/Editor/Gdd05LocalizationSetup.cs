@@ -50,6 +50,8 @@ public static class Gdd05LocalizationSetup
         ("leaderboard_empty", "No scores yet", "Пока нет результатов"),
         ("your_record", "Your record: {0}", "Ваш рекорд: {0}"),
         ("enemy_miss", "Enemy Miss", "Противник промахнулся!"),
+        ("nickname_placeholder", "Nickname (2–16)", "Ник (2–16)"),
+        ("submit_score", "Submit", "Отправить"),
     };
 
     [MenuItem("QDG2/Setup Unity Localization Tables")]

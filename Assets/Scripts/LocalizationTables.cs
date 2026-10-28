@@ -49,6 +49,8 @@ public static class LocalizationTables
         public const string LeaderboardEmpty = "leaderboard_empty";
         public const string YourRecord = "your_record";
         public const string EnemyMiss = "enemy_miss";
+        public const string NicknamePlaceholder = "nickname_placeholder";
+        public const string SubmitScore = "submit_score";
     }
 
     private static string _language = DefaultLanguage;
@@ -298,6 +300,10 @@ public static class LocalizationTables
                 return ru ? "Ваш рекорд: {0}" : "Your record: {0}";
             case Keys.EnemyMiss:
                 return ru ? "Противник промахнулся!" : "Enemy Miss";
+            case Keys.NicknamePlaceholder:
+                return ru ? "Ник (2–16)" : "Nickname (2–16)";
+            case Keys.SubmitScore:
+                return ru ? "Отправить" : "Submit";
             default:
                 return key;
         }

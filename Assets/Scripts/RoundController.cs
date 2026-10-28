@@ -230,6 +230,7 @@ public partial class RoundController : MonoBehaviour
         EnsureAimDimOverlay();
         EnsurePauseMenu();
         EnsureOrientationControls();
+        EnsureSafeAreaPadding();
         EnsureGunAim();
         CollectActionButtons();
         ConfigureBells();
@@ -572,6 +573,20 @@ public partial class RoundController : MonoBehaviour
             existing = parent.gameObject.AddComponent<OrientationControls>();
 
         existing.Configure(verticalControls, horizontalControls);
+    }
+
+    private void EnsureSafeAreaPadding()
+    {
+        Canvas canvas = FindFirstObjectByType<Canvas>();
+        if (canvas == null)
+            return;
+
+        Transform hud = canvas.transform.Find("HUD");
+        if (hud == null)
+            return;
+
+        if (hud.GetComponent<SafeAreaPadding>() == null)
+            hud.gameObject.AddComponent<SafeAreaPadding>();
     }
 
     private void EnsureGunAim()

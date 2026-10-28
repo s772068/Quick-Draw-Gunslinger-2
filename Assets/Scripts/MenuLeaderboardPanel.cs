@@ -97,15 +97,9 @@ public class MenuLeaderboardPanel : MonoBehaviour
             if (_cache.ContainsKey(kind))
                 continue;
 
-            if (YandexLeaderboards.Instance == null)
-            {
-                _cache[kind] = new YandexLeaderboards.BoardPage(false, 0, null);
-                continue;
-            }
-
             bool done = false;
             YandexLeaderboards.BoardPage page = default;
-            YandexLeaderboards.Instance.Load(kind, result =>
+            PlatformLeaderboards.Load(kind, result =>
             {
                 page = result;
                 done = true;
@@ -127,7 +121,7 @@ public class MenuLeaderboardPanel : MonoBehaviour
                 ShowCached(kind);
 
             // Stay under Yandex getEntries rate limit when requesting all three boards.
-            if (i < kinds.Length - 1)
+            if (i < kinds.Length - 1 && !PlatformLeaderboards.UseHttp)
                 yield return new WaitForSecondsRealtime(0.35f);
         }
 
@@ -369,7 +363,7 @@ public class MenuLeaderboardPanel : MonoBehaviour
 
     private string FormatScore(int score)
     {
-        if (!YandexLeaderboards.IsTimeBoard(_kind))
+        if (!PlatformLeaderboards.IsTimeBoard(_kind))
             return score.ToString();
 
         return SeriesRun.FormatSeconds(score / 1000f);
