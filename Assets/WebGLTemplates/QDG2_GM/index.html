@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
+    <title>{{{ PRODUCT_NAME }}}</title>
+    <!-- GameMonetize HTML5 SDK. gameId is the hash from the GM dashboard. Ads are requested from Unity via sdk.showBanner(), never on load. -->
+    <script>
+      window.__gmPaused = false;
+      function gmSend(method) {
+        try {
+          if (window.unityInstance)
+            window.unityInstance.SendMessage("YandexGamesSdk", method);
+        } catch (e) {
+          console.warn("GameMonetize pause bridge failed", e);
+        }
+      }
+      function gmRaiseOverlays() {
+        var nodes = document.querySelectorAll("#promo, #imaContainer, #splash, .splash-container, #preroll_banner_container, #preroll_banner_container_new");
+        for (var i = 0; i < nodes.length; i++) {
+          nodes[i].style.zIndex = "2147483646";
+          nodes[i].style.position = "fixed";
+          nodes[i].style.left = "0";
+          nodes[i].style.top = "0";
+          nodes[i].style.width = "100%";
+          nodes[i].style.height = "100%";
+        }
+      }
+      if (window.MutationObserver) {
+        new MutationObserver(gmRaiseOverlays).observe(document.documentElement, { childList: true, subtree: true });
+      }
+      window.SDK_OPTIONS = {
+        gameId: "ujnf38av37kas63rk4o47yzjhbb4ql9h",
+        onEvent: function (event) {
+          try {
+            var name = event && event.name;
+            if (name === "SDK_GAME_PAUSE") {
+              window.__gmPaused = true;
+              gmSend("OnYandexPause");
+              gmRaiseOverlays();
+            } else if (name === "SDK_GAME_START") {
+              window.__gmPaused = false;
+              gmSend("OnYandexResume");
+            } else if (name === "SDK_READY") {
+              window.__gmReady = true;
+            } else if (name === "SDK_ERROR" || name === "SDK_BLOCKED") {
+              console.warn("GameMonetize", name, event);
+            }
+          } catch (e) {
+            console.warn("GameMonetize onEvent failed", e);
+          }
+        }
+      };
+      (function (doc, tag, id) {
+        var first = doc.getElementsByTagName(tag)[0];
+        if (doc.getElementById(id)) return;
+        var script = doc.createElement(tag);
+        script.id = id;
+        script.src = "https://api.gamemonetize.com/sdk.js";
+        first.parentNode.insertBefore(script, first);
+      })(document, "script", "gamemonetize-sdk");
+    </script>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+#if SHOW_DIAGNOSTICS
+    <link rel="stylesheet" href="<<<TemplateData/diagnostics.css>>>">
+    <script src="<<<TemplateData/diagnostics.js>>>"></script>
+#endif
+#if DEVELOPMENT_PLAYER
+  <script src="<<<TemplateData/profiler.js>>>"></script>
+#endif
+  </head>
+  <body>
+    <div id="unity-container" class="unity-fill">
+      <canvas id="unity-canvas" width={{{ WIDTH }}} height={{{ HEIGHT }}} tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+    </div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      var container = document.querySelector("#unity-container");
+
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      function fitCanvasToWindow() {
+        var w = Math.max(1, window.innerWidth || document.documentElement.clientWidth);
+        var h = Math.max(1, window.innerHeight || document.documentElement.clientHeight);
+        container.style.width = w + "px";
+        container.style.height = h + "px";
+        canvas.style.width = w + "px";
+        canvas.style.height = h + "px";
+      }
+
+      fitCanvasToWindow();
+      window.addEventListener("resize", fitCanvasToWindow);
+
+      // CrazyGames / portal: block browser context menu on long-press / right-click.
+      document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+#if USE_THREADS
+        workerUrl: buildUrl + "/{{{ WORKER_FILENAME }}}",
+#endif
+#if USE_WASM
+        codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+        symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+#endif
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        showBanner: unityShowBanner,
+      };
+
+#if BACKGROUND_FILENAME
+      canvas.style.background = "url('" + buildUrl + "/{{{ BACKGROUND_FILENAME.replace(/'/g, '%27') }}}') center / cover";
+#endif
+      document.querySelector("#unity-loading-bar").style.display = "block";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+          window.unityInstance = unityInstance;
+          if (window.__gmPaused)
+            unityInstance.SendMessage("YandexGamesSdk", "OnYandexPause");
+          document.querySelector("#unity-loading-bar").style.display = "none";
+          fitCanvasToWindow();
+#if SHOW_DIAGNOSTICS
+          document.getElementById("diagnostics-icon").onclick = () => {
+            unityDiagnostics.openDiagnosticsDiv(unityInstance.GetMetricsInfo);
+          };
+#endif
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>

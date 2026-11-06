@@ -296,7 +296,7 @@ public partial class RoundController
     private void CommitAndShowSummary(bool sendToYandex)
     {
         _submitting = true;
-        // GDD 0.8: interstitial on confirmed finish-series (SDK only; frequency gated by Yandex).
+        // Interstitial on confirmed finish-series. Yandex may skip it; GameMonetize returns immediately and pauses from SDK events.
         ShowFinishSeriesAdThen(() => CommitAndShowSummaryAfterAd(sendToYandex));
     }
 

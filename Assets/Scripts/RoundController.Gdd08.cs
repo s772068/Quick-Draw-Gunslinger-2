@@ -189,7 +189,7 @@ public partial class RoundController
             return;
 
         // Between rounds only — never mid-input during the duel.
-        YandexGamesSdk.ShowFullscreenAdv(wasShown =>
+        PlatformAds.ShowInterstitial(wasShown =>
         {
             if (wasShown)
                 _roundsSinceLastAd = 0;
@@ -198,7 +198,7 @@ public partial class RoundController
 
     private void ShowFinishSeriesAdThen(System.Action continueAction)
     {
-        YandexGamesSdk.ShowFullscreenAdv(wasShown =>
+        PlatformAds.ShowInterstitial(wasShown =>
         {
             if (wasShown)
                 _roundsSinceLastAd = 0;

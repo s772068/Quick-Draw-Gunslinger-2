@@ -122,6 +122,7 @@ public class MainMenuController : MonoBehaviour
 
     private void OnBeginClicked()
     {
+        PlatformAds.ShowInterstitial();
         SceneManager.LoadScene(gameSceneName);
     }
 
