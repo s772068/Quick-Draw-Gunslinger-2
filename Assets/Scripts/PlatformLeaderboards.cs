@@ -19,7 +19,8 @@ public static class PlatformLeaderboards
         }
     }
 
-    public static string SureBoard => UseHttp ? HttpLeaderboards.SureBoard : YandexLeaderboards.SureBoard;
+    public static string SureBoard => UseHttp ? HttpLeaderboards.RichestBoard : YandexLeaderboards.SureBoard;
+    public static string RichestBoard => UseHttp ? HttpLeaderboards.RichestBoard : YandexLeaderboards.SureBoard;
     public static string FastestBoard => UseHttp ? HttpLeaderboards.FastestBoard : YandexLeaderboards.FastestBoard;
     public static string SteadyBoard => UseHttp ? HttpLeaderboards.SteadyBoard : YandexLeaderboards.SteadyBoard;
 

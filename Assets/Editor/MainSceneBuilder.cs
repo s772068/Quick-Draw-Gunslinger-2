@@ -115,13 +115,6 @@ public static class MainSceneBuilder
         so.FindProperty("pullButton").objectReferenceValue = pullButton;
         so.FindProperty("fireButton").objectReferenceValue = fireButton;
         so.FindProperty("restartButton").objectReferenceValue = restartButton;
-        var bellRange = so.FindProperty("bellDelayRange");
-        if (bellRange != null)
-        {
-            bellRange.vector2Value = new Vector2(0.8f, 1.4f);
-        }
-        so.FindProperty("aimDuration").floatValue = 1f;
-        so.FindProperty("aimAfterMissDuration").floatValue = 0.5f;
         so.ApplyModifiedPropertiesWithoutUndo();
 
         Directory.CreateDirectory("Assets/Scenes");

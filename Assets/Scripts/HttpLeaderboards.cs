@@ -9,7 +9,8 @@ using UnityEngine.Networking;
 /// </summary>
 public class HttpLeaderboards : MonoBehaviour
 {
-    public const string SureBoard = "sure";
+    public const string SureBoard = "richest";
+    public const string RichestBoard = "richest";
     public const string FastestBoard = "fastest";
     public const string SteadyBoard = "steady";
 
@@ -97,9 +98,14 @@ public class HttpLeaderboards : MonoBehaviour
         StartCoroutine(LoadRoutine(BoardName(kind), callback));
     }
 
+    public void LoadBoard(string board, Action<YandexLeaderboards.BoardPage> callback)
+    {
+        StartCoroutine(LoadRoutine(board, callback));
+    }
+
     public void LoadRank(string board, Action<int> callback)
     {
-        Load(KindFromBoard(board), page => callback?.Invoke(page.Ok ? page.UserRank : 0));
+        StartCoroutine(LoadRoutine(board, page => callback?.Invoke(page.Ok ? page.UserRank : 0)));
     }
 
     public IEnumerator Submit(string board, int score, string name)

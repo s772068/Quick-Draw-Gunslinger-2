@@ -62,6 +62,7 @@
       })(document, "script", "gamemonetize-sdk");
     </script>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="icon" type="image/png" sizes="48x48" href="TemplateData/favicon-48.png">
     <link rel="stylesheet" href="TemplateData/style.css">
 #if SHOW_DIAGNOSTICS
     <link rel="stylesheet" href="<<<TemplateData/diagnostics.css>>>">
@@ -114,6 +115,13 @@
         canvas.style.height = h + "px";
       }
 
+      window.hideUnityLoadingBar = function () {
+        var bar = document.querySelector("#unity-loading-bar");
+        if (bar)
+          bar.style.display = "none";
+        fitCanvasToWindow();
+      };
+
       fitCanvasToWindow();
       window.addEventListener("resize", fitCanvasToWindow);
 
@@ -156,8 +164,8 @@
           window.unityInstance = unityInstance;
           if (window.__gmPaused)
             unityInstance.SendMessage("YandexGamesSdk", "OnYandexPause");
-          document.querySelector("#unity-loading-bar").style.display = "none";
           fitCanvasToWindow();
+          setTimeout(function () { window.hideUnityLoadingBar(); }, 12000);
 #if SHOW_DIAGNOSTICS
           document.getElementById("diagnostics-icon").onclick = () => {
             unityDiagnostics.openDiagnosticsDiv(unityInstance.GetMetricsInfo);

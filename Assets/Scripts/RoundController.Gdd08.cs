@@ -26,7 +26,9 @@ public partial class RoundController
     {
         Transform hud = roundStartPanel != null
             ? roundStartPanel.transform.parent
-            : (roundFinishPanel != null ? roundFinishPanel.transform.parent : null);
+            : (roundWinPanel != null
+                ? roundWinPanel.transform.parent
+                : (roundFinishPanel != null ? roundFinishPanel.transform.parent : null));
         if (hud == null)
             return;
 
@@ -64,6 +66,10 @@ public partial class RoundController
     {
         return IsPanelShowing(roundStartPanel)
                || IsPanelShowing(roundFinishPanel)
+               || IsPanelShowing(roundWinPanel)
+               || IsPanelShowing(roundLosePanel)
+               || IsPanelShowing(levelCompletePanel)
+               || IsPanelShowing(areYouSureAbortPanel)
                || IsPanelShowing(_seriesSummary)
                || IsPanelShowing(_areYouSure)
                || IsPanelShowing(_authPrompt)
@@ -90,6 +96,10 @@ public partial class RoundController
                       && !_paused
                       && !IsPanelShowing(roundStartPanel)
                       && !IsPanelShowing(roundFinishPanel)
+                      && !IsPanelShowing(roundWinPanel)
+                      && !IsPanelShowing(roundLosePanel)
+                      && !IsPanelShowing(levelCompletePanel)
+                      && !IsPanelShowing(areYouSureAbortPanel)
                       && !IsPanelShowing(_seriesSummary)
                       && !IsPanelShowing(_areYouSure)
                       && !IsPanelShowing(_authPrompt)
@@ -184,6 +194,9 @@ public partial class RoundController
 
     private void NoteRoundFinishedForAds()
     {
+        if (_trainingActive)
+            return;
+
         _roundsSinceLastAd++;
         if (_roundsSinceLastAd < RoundsPerInterstitial)
             return;
@@ -198,6 +211,12 @@ public partial class RoundController
 
     private void ShowFinishSeriesAdThen(System.Action continueAction)
     {
+        if (_trainingActive)
+        {
+            continueAction?.Invoke();
+            return;
+        }
+
         PlatformAds.ShowInterstitial(wasShown =>
         {
             if (wasShown)

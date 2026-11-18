@@ -52,6 +52,17 @@ public static class Gdd05LocalizationSetup
         ("enemy_miss", "Enemy Miss", "Противник промахнулся!"),
         ("nickname_placeholder", "Nickname (2–16)", "Ник (2–16)"),
         ("submit_score", "Submit", "Отправить"),
+        ("towns", "Towns", "Города"),
+        ("menu_training", "Training", "Обучение"),
+        ("modal_wait", "The duel begins. Get ready to hear the bell", "Начинается дуэль. Приготовься услышать звук колокола"),
+        ("modal_draw", "The start signal is given — draw your revolver!", "Сигнал к старту дан, доставай револьвер!"),
+        ("modal_pull", "Cock the hammer!", "Взведи курок!"),
+        ("modal_aim", "Wait until the sight lines up on the enemy", "Жди, пока прицел наведётся на противника"),
+        ("modal_fire", "Shoot", "Стреляй"),
+        ("modal_hit", "You hit the enemy. Training is done — but in a real duel you must finish before the enemy shoots!", "Ты поразил противника. Ты закончил обучение, но помни: в реальной дуэли всё это нужно сделать до того, как выстрелит противник!"),
+        ("training_retry", "Retry", "Повторить"),
+        ("training_ready", "I'm ready", "Я готов"),
+        ("ok", "OK", "Ок"),
     };
 
     [MenuItem("QDG2/Setup Unity Localization Tables")]
@@ -87,10 +98,13 @@ public static class Gdd05LocalizationSetup
 
             Debug.Log("Unity Localization ready: String Table '" + TableName + "' (EN+RU). Settings=" +
                       (LocalizationEditorSettings.ActiveLocalizationSettings != null));
-            EditorUtility.DisplayDialog(
-                "Localization Setup",
-                "Created/updated String Table \"" + TableName + "\" (EN+RU).\n\nOpen: Window → Asset Management → Localization Tables",
-                "OK");
+            if (!Application.isBatchMode)
+            {
+                EditorUtility.DisplayDialog(
+                    "Localization Setup",
+                    "Created/updated String Table \"" + TableName + "\" (EN+RU).\n\nOpen: Window → Asset Management → Localization Tables",
+                    "OK");
+            }
         }
         catch (System.Exception e)
         {

@@ -151,6 +151,58 @@ MonoBehaviour:
     m_Key: enemy_miss
     m_Metadata:
       m_Items: []
+  - m_Id: 674226210
+    m_Key: towns
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766668726272
+    m_Key: nickname_placeholder
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446528
+    m_Key: submit_score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446529
+    m_Key: menu_training
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446530
+    m_Key: modal_wait
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446531
+    m_Key: modal_draw
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446532
+    m_Key: modal_pull
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446533
+    m_Key: modal_aim
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446534
+    m_Key: modal_fire
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446535
+    m_Key: modal_hit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446536
+    m_Key: training_retry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446537
+    m_Key: training_ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446538
+    m_Key: ok
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
