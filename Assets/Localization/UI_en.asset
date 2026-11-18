@@ -73,9 +73,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 674226184
-    m_Localized: 'Continue series
-
-      [SPACE]'
+    m_Localized: Continue series
     m_Metadata:
       m_Items: []
   - m_Id: 674226185
@@ -117,7 +115,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 674226194
-    m_Localized: 'Result:'
+    m_Localized: 'Score:'
     m_Metadata:
       m_Items: []
   - m_Id: 674226195
@@ -158,6 +156,59 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 674226204
     m_Localized: Enemy Miss
+    m_Metadata:
+      m_Items: []
+  - m_Id: 674226210
+    m_Localized: Towns
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766668726272
+    m_Localized: "Nickname (2\u201316)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446528
+    m_Localized: Submit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446529
+    m_Localized: Training
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446530
+    m_Localized: The duel begins. Get ready to hear the bell
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446531
+    m_Localized: "The start signal is given \u2014 draw your revolver!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446532
+    m_Localized: Cock the hammer!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446533
+    m_Localized: Wait until the sight lines up on the enemy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446534
+    m_Localized: Shoot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446535
+    m_Localized: "You hit the enemy. Training is done \u2014 but in a real duel you
+      must finish before the enemy shoots!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446536
+    m_Localized: Retry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446537
+    m_Localized: I'm ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446538
+    m_Localized: OK
     m_Metadata:
       m_Items: []
   references:

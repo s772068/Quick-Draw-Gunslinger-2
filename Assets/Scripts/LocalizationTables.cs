@@ -49,6 +49,22 @@ public static class LocalizationTables
         public const string LeaderboardEmpty = "leaderboard_empty";
         public const string YourRecord = "your_record";
         public const string EnemyMiss = "enemy_miss";
+<<<<<<< Updated upstream
+=======
+        public const string NicknamePlaceholder = "nickname_placeholder";
+        public const string SubmitScore = "submit_score";
+        public const string Towns = "towns";
+        public const string MenuTraining = "menu_training";
+        public const string ModalWait = "modal_wait";
+        public const string ModalDraw = "modal_draw";
+        public const string ModalPull = "modal_pull";
+        public const string ModalAim = "modal_aim";
+        public const string ModalFire = "modal_fire";
+        public const string ModalHit = "modal_hit";
+        public const string TrainingRetry = "training_retry";
+        public const string TrainingReady = "training_ready";
+        public const string Ok = "ok";
+>>>>>>> Stashed changes
     }
 
     private static string _language = DefaultLanguage;
@@ -298,6 +314,43 @@ public static class LocalizationTables
                 return ru ? "Ваш рекорд: {0}" : "Your record: {0}";
             case Keys.EnemyMiss:
                 return ru ? "Противник промахнулся!" : "Enemy Miss";
+<<<<<<< Updated upstream
+=======
+            case Keys.NicknamePlaceholder:
+                return ru ? "Ник (2–16)" : "Nickname (2–16)";
+            case Keys.SubmitScore:
+                return ru ? "Отправить" : "Submit";
+            case Keys.Towns:
+                return ru ? "Города" : "Towns";
+            case Keys.MenuTraining:
+                return ru ? "Обучение" : "Training";
+            case Keys.ModalWait:
+                return ru
+                    ? "Начинается дуэль. Приготовься услышать звук колокола"
+                    : "The duel begins. Get ready to hear the bell";
+            case Keys.ModalDraw:
+                return ru
+                    ? "Сигнал к старту дан, доставай револьвер!"
+                    : "The start signal is given — draw your revolver!";
+            case Keys.ModalPull:
+                return ru ? "Взведи курок!" : "Cock the hammer!";
+            case Keys.ModalAim:
+                return ru
+                    ? "Жди, пока прицел наведётся на противника"
+                    : "Wait until the sight lines up on the enemy";
+            case Keys.ModalFire:
+                return ru ? "Стреляй" : "Shoot";
+            case Keys.ModalHit:
+                return ru
+                    ? "Ты поразил противника. Ты закончил обучение, но помни: в реальной дуэли всё это нужно сделать до того, как выстрелит противник!"
+                    : "You hit the enemy. Training is done — but in a real duel you must finish before the enemy shoots!";
+            case Keys.TrainingRetry:
+                return ru ? "Повторить" : "Retry";
+            case Keys.TrainingReady:
+                return ru ? "Я готов" : "I'm ready";
+            case Keys.Ok:
+                return ru ? "Ок" : "OK";
+>>>>>>> Stashed changes
             default:
                 return key;
         }

@@ -86,12 +86,19 @@ public class YandexGamesSdk : MonoBehaviour
 
         IsReady = true;
         SdkReady?.Invoke();
-        StartCoroutine(SendLoadingReadyNextFrame());
+        StartCoroutine(SendLoadingReadyWhenBoardsReady());
     }
 
-    private IEnumerator SendLoadingReadyNextFrame()
+    private IEnumerator SendLoadingReadyWhenBoardsReady()
     {
-        yield return null;
+        float wait = 0f;
+        const float timeout = 10f;
+        while (!LeaderboardCache.IsReady && wait < timeout)
+        {
+            wait += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
         NotifyLoadingReady();
     }
 

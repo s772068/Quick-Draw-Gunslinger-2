@@ -58,6 +58,25 @@ public class OrientationBackground : MonoBehaviour
     }
 #endif
 
+    public void UseLevelSprites(Sprite horizontal, Sprite vertical)
+    {
+        if (horizontal != null)
+        {
+            backHorSprite = horizontal;
+            landscapeSprite = horizontal;
+        }
+
+        if (vertical != null)
+        {
+            backVertSprite = vertical;
+            portraitSprite = vertical;
+        }
+
+        _lastWidth = -1;
+        _lastHeight = -1;
+        ApplyForCurrentView(force: true);
+    }
+
     private void ApplyForCurrentView(bool force)
     {
         if (targetImage == null)

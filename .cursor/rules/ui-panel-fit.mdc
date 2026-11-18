@@ -1,0 +1,17 @@
+---
+description: Generated UI panels must size from content so buttons always fit inside
+globs: Assets/Scripts/SceneUiFactory.cs,Assets/Editor/**/*Ui*.cs,Assets/Editor/**/*Gdd*Setup*.cs
+alwaysApply: false
+---
+
+# UI panel fit
+
+When creating or regenerating HUD/menu panels:
+
+1. **Content first**: stack labels/buttons with fixed gaps, then set panel `sizeDelta` from content bounds + padding. Never guess a panel size smaller than its children.
+2. **Buttons inside**: each button width ≤ panel width − horizontal padding; vertical stack must leave top/bottom padding.
+3. **No overlap**: place controls with explicit gaps; if two buttons share a row, total width + gap must fit the panel.
+4. **White sprites**: Image/Button color `#FFFFFF` alpha 255 so authored art shows correctly.
+5. **Do not move designer-authored controls** (e.g. Begin, StartBtn, BottomPanel) unless the user explicitly asks.
+6. **Runtime layout must not dirty the scene**: no `[ExecuteAlways]` that writes RectTransforms in edit mode.
+7. **Bake into the scene**: sprites, sizes, and coordinates for generated panels are applied via editor menu (`QDG2/Rebuild…`), not at runtime. Scene view must match Play Mode so the designer can layout visually.

@@ -17,6 +17,7 @@ public class PlayerGunAim : MonoBehaviour
     private Quaternion _restLocalRotation;
     private bool _hasRest;
     private bool _aiming;
+    private bool _frozen;
 
     private void Awake()
     {
@@ -32,6 +33,9 @@ public class PlayerGunAim : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (_frozen)
+            return;
+
         if (playerGun == null || direction == null || crossfire == null)
             return;
 
@@ -52,8 +56,18 @@ public class PlayerGunAim : MonoBehaviour
     public void SetAiming(bool aiming)
     {
         _aiming = aiming;
-        if (!aiming && _hasRest && playerGun != null)
+        if (!aiming && !_frozen && _hasRest && playerGun != null)
             playerGun.localRotation = _restLocalRotation;
+    }
+
+    public void Freeze()
+    {
+        _frozen = true;
+    }
+
+    public void Unfreeze()
+    {
+        _frozen = false;
     }
 
     public void CaptureRestPose()

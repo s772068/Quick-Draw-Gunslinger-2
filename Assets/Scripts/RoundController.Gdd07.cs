@@ -24,20 +24,59 @@ public partial class RoundController
 
     private void BindSeriesUi()
     {
-        if (roundFinishPanel != null)
+        Transform hud = null;
+        if (roundStartPanel != null)
+            hud = roundStartPanel.transform.parent;
+        else if (roundWinPanel != null)
+            hud = roundWinPanel.transform.parent;
+        else if (roundFinishPanel != null)
+            hud = roundFinishPanel.transform.parent;
+
+        if (hud != null)
         {
-            _areYouSure = FindChild(roundFinishPanel, "AreYouSure");
-            _authPrompt = SceneUiFactory.EnsureAuthPrompt(roundFinishPanel.transform);
-            Transform hud = roundFinishPanel.transform.parent;
-            if (hud != null)
+            if (roundWinPanel == null)
             {
-                Transform summary = hud.Find("SeriesSummary");
-                if (summary != null)
-                    _seriesSummary = summary.gameObject;
+                Transform t = hud.Find("RoundWin");
+                if (t != null)
+                    roundWinPanel = t.gameObject;
+            }
+
+            if (roundLosePanel == null)
+            {
+                Transform t = hud.Find("RoundLose");
+                if (t != null)
+                    roundLosePanel = t.gameObject;
+            }
+
+            if (levelCompletePanel == null)
+            {
+                Transform t = hud.Find("LevelComplete");
+                if (t != null)
+                    levelCompletePanel = t.gameObject;
+            }
+
+            if (areYouSureAbortPanel == null)
+            {
+                Transform t = hud.Find("AreYouSureAbort");
+                if (t != null)
+                    areYouSureAbortPanel = t.gameObject;
             }
         }
-        HideSeriesOverlays();
+<<<<<<< Updated upstream
+=======
 
+        _seriesSummary = levelCompletePanel;
+        _areYouSure = areYouSureAbortPanel;
+        _authPrompt = null;
+        CacheNicknameUi();
+>>>>>>> Stashed changes
+        HideSeriesOverlays();
+        SetPanelActive(roundWinPanel, false);
+        SetPanelActive(roundLosePanel, false);
+        SetPanelActive(levelCompletePanel, false);
+        SetPanelActive(areYouSureAbortPanel, false);
+
+<<<<<<< Updated upstream
         WireChild(roundStartPanel, "ExitBtn", OnPauseExitClicked);
         WireChild(roundFinishPanel, "FinishSeriesBtn", OnFinishSeriesClicked);
         WireChild(roundFinishPanel, "ContinueSeriesBtn", OnContinueSeriesClicked);
@@ -52,6 +91,67 @@ public partial class RoundController
         RefreshCounters();
     }
 
+=======
+        WireChild(roundStartPanel, "ExitBtn", OnAbortToMapClicked);
+        WireChild(roundStartPanel, "Map", OnAbortToMapClicked);
+        WireChild(roundWinPanel, "Next", OnNextRoundGdd10);
+        WireChild(roundWinPanel, "Map", OnAbortToMapClicked);
+        WireChild(roundLosePanel, "Retry", OnRetryCityGdd10);
+        WireChild(roundLosePanel, "Map", OnPauseExitClicked);
+        WireChild(areYouSureAbortPanel, "Yes", OnAbortConfirmedClicked);
+        WireChild(areYouSureAbortPanel, "No", OnNoClicked);
+        WireChild(levelCompletePanel, "Retry", OnRetryCityGdd10);
+        WireChild(levelCompletePanel, "Map", OnPauseExitClicked);
+        WireChild(levelCompletePanel, "NextCity", OnNextCityGdd10);
+        WireChild(levelCompletePanel, "SubmitBtn", OnHttpSubmitClicked);
+        RefreshCounters();
+    }
+
+    private void CacheNicknameUi()
+    {
+        _nicknameInput = null;
+        _httpSubmitBtn = null;
+        if (levelCompletePanel == null)
+            return;
+
+        Transform input = levelCompletePanel.transform.Find("InputNickname");
+        if (input != null)
+            _nicknameInput = input.GetComponent<TMP_InputField>();
+
+        Transform submit = levelCompletePanel.transform.Find("SubmitBtn");
+        if (submit != null)
+            _httpSubmitBtn = submit.GetComponent<Button>();
+    }
+
+    private void OnAbortToMapClicked()
+    {
+        if (_paused || YandexGamesSdk.PlatformPaused)
+            return;
+
+        if (areYouSureAbortPanel == null)
+        {
+            OnPauseExitClicked();
+            return;
+        }
+
+        SetPanelActive(areYouSureAbortPanel, true);
+        areYouSureAbortPanel.transform.SetAsLastSibling();
+        RefreshMenuButtonInteractable();
+    }
+
+    private void OnAbortConfirmedClicked()
+    {
+        SetPanelActive(areYouSureAbortPanel, false);
+        _series.Clear();
+        _cityRun.Clear();
+        Time.timeScale = 1f;
+        AudioListener.pause = false;
+        _paused = false;
+        GamePauseGate.IsUserPaused = false;
+        OnPauseExitClicked();
+    }
+
+>>>>>>> Stashed changes
     private void BeginSeriesIfNeeded()
     {
         if (_series.Started)
@@ -79,22 +179,23 @@ public partial class RoundController
     private void PresentRoundFinish(RoundOutcome outcome)
     {
         bool win = outcome == RoundOutcome.Win;
+        SetPanelActive(roundWinPanel, false);
+        SetPanelActive(roundLosePanel, false);
+        SetPanelActive(levelCompletePanel, false);
+        SetPanelActive(areYouSureAbortPanel, false);
         SetPanelActive(_seriesSummary, false);
         SetPanelActive(_areYouSure, false);
         SetPanelActive(_authPrompt, false);
-        SetPanelActive(roundFinishPanel, true);
+        SetPanelActive(roundFinishPanel, false);
 
-        SetChildActive(roundFinishPanel, "Reason", !win);
-        SetChildActive(roundFinishPanel, "RestartSeriesBtn", !win);
-        SetChildActive(roundFinishPanel, "ExitBtn", !win);
-        SetChildActive(roundFinishPanel, "ContinueSeriesBtn", win);
-        SetChildActive(roundFinishPanel, "FinishSeriesBtn", win);
+        if (win)
+            PresentRoundWinGdd10();
+        else
+            PresentRoundLoseGdd10();
 
         RefreshOutcomeTexts();
         RefreshCounters();
-        SceneTextLocalizer.Apply();
-        RefreshOutcomeTexts();
-        RefreshMenuButtonInteractable();
+        RefreshHudCounters();
     }
 
     private void RefreshOutcomeTexts()
@@ -103,15 +204,21 @@ public partial class RoundController
             return;
 
         bool win = _outcome == RoundOutcome.Win;
+        string title = LocalizationTables.Get(win ? LocalizationTables.Keys.Win : LocalizationTables.Keys.Lose);
         if (roundResultText != null)
-            roundResultText.text = LocalizationTables.Get(win ? LocalizationTables.Keys.Win : LocalizationTables.Keys.Lose);
+            roundResultText.text = title;
 
-        if (!win)
+        if (win)
         {
+            SetChildText(roundWinPanel, "Title", title);
+        }
+        else
+        {
+            SetChildText(roundLosePanel, "Title", title);
             string reason = _outcome == RoundOutcome.FalseStart
                 ? LocalizationTables.Keys.FalseStart
                 : LocalizationTables.Keys.EnemyWins;
-            SetChildText(roundFinishPanel, "Reason", LocalizationTables.Get(reason));
+            SetChildText(roundLosePanel, "Reason", LocalizationTables.Get(reason));
         }
     }
 
@@ -124,6 +231,10 @@ public partial class RoundController
 
     private void HideSeriesOverlays()
     {
+        SetPanelActive(roundWinPanel, false);
+        SetPanelActive(roundLosePanel, false);
+        SetPanelActive(levelCompletePanel, false);
+        SetPanelActive(areYouSureAbortPanel, false);
         SetPanelActive(_seriesSummary, false);
         SetPanelActive(_areYouSure, false);
         SetPanelActive(_authPrompt, false);
@@ -133,17 +244,15 @@ public partial class RoundController
     {
         if (_phase != Phase.Finished || _outcome != RoundOutcome.Win)
             return;
-        if (_areYouSure != null && _areYouSure.activeInHierarchy)
+        if (areYouSureAbortPanel != null && areYouSureAbortPanel.activeInHierarchy)
             return;
-        if (_authPrompt != null && _authPrompt.activeInHierarchy)
+        if (levelCompletePanel != null && levelCompletePanel.activeInHierarchy)
             return;
-        if (_seriesSummary != null && _seriesSummary.activeInHierarchy)
-            return;
-        if (roundFinishPanel == null || !roundFinishPanel.activeInHierarchy)
+        if (roundWinPanel == null || !roundWinPanel.activeInHierarchy)
             return;
 
-        Transform continueBtn = roundFinishPanel.transform.Find("ContinueSeriesBtn");
-        if (continueBtn == null || !continueBtn.gameObject.activeInHierarchy)
+        Transform nextBtn = roundWinPanel.transform.Find("Next");
+        if (nextBtn == null || !nextBtn.gameObject.activeInHierarchy)
             return;
 
         OnContinueSeriesClicked();
@@ -188,10 +297,12 @@ public partial class RoundController
 
     private void OnNoClicked()
     {
+        SetPanelActive(areYouSureAbortPanel, false);
         SetPanelActive(_areYouSure, false);
         RefreshMenuButtonInteractable();
     }
 
+<<<<<<< Updated upstream
     private void OnYesClicked()
     {
         if (_submitting)
@@ -222,6 +333,28 @@ public partial class RoundController
                 ShowAuthPrompt();
         });
 #endif
+=======
+    private void OnHttpSubmitClicked()
+    {
+        if (_submitting || !PlatformLeaderboards.UseHttp)
+            return;
+
+        string nick = _nicknameInput != null ? _nicknameInput.text : PlayerIdentity.Nickname;
+        nick = PlayerIdentity.SanitizeName(nick);
+        if (string.IsNullOrEmpty(nick))
+        {
+            Debug.LogWarning("Nickname required (2–16 chars)");
+            return;
+        }
+
+        PlayerIdentity.Nickname = nick;
+        if (_nicknameInput != null)
+            _nicknameInput.text = nick;
+
+        SetChildActive(levelCompletePanel, "InputNickname", false);
+        SetChildActive(levelCompletePanel, "SubmitBtn", false);
+        StartCoroutine(SubmitCityBoards());
+>>>>>>> Stashed changes
     }
 
     private void OnLoginClicked()
@@ -267,25 +400,33 @@ public partial class RoundController
     private void CommitAndShowSummaryAfterAd(bool sendToYandex)
     {
         PersonalRecords.Commit(_series);
+        SetPanelActive(roundWinPanel, false);
+        SetPanelActive(roundLosePanel, false);
         SetPanelActive(roundFinishPanel, false);
+        SetPanelActive(areYouSureAbortPanel, false);
         SetPanelActive(_areYouSure, false);
         SetPanelActive(_authPrompt, false);
-        SetPanelActive(_seriesSummary, true);
-        if (_seriesSummary != null)
-            _seriesSummary.transform.SetAsLastSibling();
+        SetPanelActive(levelCompletePanel, true);
+        if (levelCompletePanel != null)
+            levelCompletePanel.transform.SetAsLastSibling();
 
         RefreshCounters();
-        SetChildButtonInteractable(_seriesSummary, "RestartSeriesBtn", true);
-        SetChildButtonInteractable(_seriesSummary, "ExitBtn", true);
+        SetChildButtonInteractable(levelCompletePanel, "Retry", true);
+        SetChildButtonInteractable(levelCompletePanel, "Map", true);
+        SetChildButtonInteractable(levelCompletePanel, "NextCity", true);
         RefreshMenuButtonInteractable();
-        SetChildText(_seriesSummary, "SeriesResultText", LocalizationTables.Get(LocalizationTables.Keys.SeriesResult));
+        SetChildText(levelCompletePanel, "CityName", LocalizationTables.Get(LocalizationTables.Keys.SeriesResult));
         SceneTextLocalizer.Apply();
-        SetChildText(_seriesSummary, "SeriesResultText", LocalizationTables.Get(LocalizationTables.Keys.SeriesResult));
 
+<<<<<<< Updated upstream
         bool editorPlaces = sendToYandex == false;
         SetPlace("SurePlace", _series.Wins > 0, editorPlaces);
         SetPlace("FastestPlace", _series.TryBestSeconds(out _), editorPlaces);
         SetPlace("SteadyPlace", _series.TrySteadySeconds(out _), editorPlaces);
+=======
+        bool httpPath = !sendToYandex && PlatformLeaderboards.UseHttp;
+        PrepareNicknameUi(httpPath);
+>>>>>>> Stashed changes
 
         if (sendToYandex)
             StartCoroutine(SubmitSeries());
@@ -293,7 +434,38 @@ public partial class RoundController
             _submitting = false;
     }
 
+<<<<<<< Updated upstream
     private IEnumerator SubmitSeries()
+=======
+    private void PrepareNicknameUi(bool showHttpSubmit)
+    {
+        CacheNicknameUi();
+        SetChildActive(levelCompletePanel, "InputNickname", showHttpSubmit);
+        SetChildActive(levelCompletePanel, "SubmitBtn", showHttpSubmit);
+
+        if (!showHttpSubmit)
+            return;
+
+        if (_nicknameInput != null)
+        {
+            _nicknameInput.characterLimit = 16;
+            if (PlayerIdentity.HasNickname)
+                _nicknameInput.text = PlayerIdentity.Nickname;
+            if (_nicknameInput.placeholder is TMP_Text ph)
+                ph.text = LocalizationTables.Get(LocalizationTables.Keys.NicknamePlaceholder);
+        }
+
+        if (_httpSubmitBtn != null)
+        {
+            _httpSubmitBtn.interactable = true;
+            var label = _httpSubmitBtn.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+                label.text = LocalizationTables.Get(LocalizationTables.Keys.SubmitScore);
+        }
+    }
+
+    private IEnumerator SubmitSeriesYandex()
+>>>>>>> Stashed changes
     {
         if (YandexLeaderboards.Instance == null)
         {

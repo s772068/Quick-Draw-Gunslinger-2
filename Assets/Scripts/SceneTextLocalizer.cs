@@ -40,6 +40,9 @@ public static class SceneTextLocalizer
         if (t.name == "Hint")
             return null;
 
+        if (t.name == "Title" && HasAncestor(t, "WorldMap"))
+            return LocalizationTables.Keys.Towns;
+
         switch (t.name)
         {
             case "FastestScore":
@@ -73,12 +76,29 @@ public static class SceneTextLocalizer
         return KeyForObjectName(t.name);
     }
 
+    private static bool HasAncestor(Transform t, string name)
+    {
+        Transform parent = t.parent;
+        while (parent != null)
+        {
+            if (parent.name == name)
+                return true;
+            parent = parent.parent;
+        }
+
+        return false;
+    }
+
     private static string KeyForObjectName(string name)
     {
         switch (name)
         {
             case "StartBtn": return LocalizationTables.Keys.StartSeries;
             case "Begin": return LocalizationTables.Keys.MenuBegin;
+            case "Training": return LocalizationTables.Keys.MenuTraining;
+            case "Ok": return LocalizationTables.Keys.Ok;
+            case "Retry": return LocalizationTables.Keys.TrainingRetry;
+            case "Ready": return LocalizationTables.Keys.TrainingReady;
             case "Title": return LocalizationTables.Keys.GameTitle;
             case "ReadyLabel": return LocalizationTables.Keys.Ready;
             case "Continue":
