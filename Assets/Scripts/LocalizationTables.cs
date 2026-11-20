@@ -114,18 +114,7 @@ public static class LocalizationTables
 #endif
     }
 
-    public static string MapSdkLanguage(string sdkLang)
-    {
-        if (string.IsNullOrWhiteSpace(sdkLang))
-            return DefaultLanguage;
-
-        string code = sdkLang.Trim().ToLowerInvariant();
-        if (code.StartsWith("ru", StringComparison.Ordinal))
-            return "ru";
-        if (code.StartsWith("en", StringComparison.Ordinal))
-            return "en";
-        return DefaultLanguage;
-    }
+    public static string MapSdkLanguage(string sdkLang) => DefaultLanguage;
 
     public static string Get(string key)
     {
@@ -136,10 +125,13 @@ public static class LocalizationTables
 
         try
         {
-            if (LocalizationSettings.InitializationOperation.IsDone &&
-                LocalizationSettings.SelectedLocale != null)
+            if (LocalizationSettings.InitializationOperation.IsDone)
             {
-                string value = LocalizationSettings.StringDatabase.GetLocalizedString(TableName, key);
+                Locale english = LocalizationSettings.AvailableLocales.GetLocale(DefaultLanguage);
+                if (english == null)
+                    return GetEmbedded(key);
+
+                string value = LocalizationSettings.StringDatabase.GetLocalizedString(TableName, key, english);
                 if (!string.IsNullOrEmpty(value) &&
                     !value.StartsWith("No translation found", StringComparison.Ordinal))
                     return value;
@@ -160,7 +152,7 @@ public static class LocalizationTables
 
     internal static void ApplyLocaleCode(string code, bool invokeEvent)
     {
-        string mapped = string.IsNullOrEmpty(code) ? DefaultLanguage : code;
+        string mapped = DefaultLanguage;
         _language = mapped;
 
         try
@@ -328,7 +320,7 @@ public static class LocalizationTables
                     ? "Сигнал к старту дан, доставай револьвер!"
                     : "The start signal is given — draw your revolver!";
             case Keys.ModalPull:
-                return ru ? "Взведи курок!" : "Cock the hammer!";
+                return ru ? "Взведи курок!" : "Pull the hammer!";
             case Keys.ModalAim:
                 return ru
                     ? "Жди, пока прицел наведётся на противника"
@@ -338,7 +330,7 @@ public static class LocalizationTables
             case Keys.ModalHit:
                 return ru
                     ? "Ты поразил противника. Ты закончил обучение, но помни: в реальной дуэли всё это нужно сделать до того, как выстрелит противник!"
-                    : "You hit the enemy. Training is done — but in a real duel you must finish before the enemy shoots!";
+                    : "Nice shot! In a real duel, you'll need to shoot first.";
             case Keys.TrainingRetry:
                 return ru ? "Повторить" : "Retry";
             case Keys.TrainingReady:

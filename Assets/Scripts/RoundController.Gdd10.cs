@@ -13,6 +13,8 @@ using UnityEngine.UI;
 /// </summary>
 public partial class RoundController
 {
+    [SerializeField] private Sprite[] cityResultStars;
+
     private readonly CityRun _cityRun = new CityRun();
     private AimTrajectory.Path _aimPath;
     private bool _aimPathReady;
@@ -83,9 +85,10 @@ public partial class RoundController
             return;
         Transform parent = crossfire.parent != null ? crossfire.parent : crossfire;
         var existing = parent.Find("HitSprite");
-        if (existing != null)
+        if (existing != null && existing.TryGetComponent(out _hitMarker))
         {
-            _hitMarker = existing.GetComponent<Image>();
+            _hitMarker.sprite = shotFlashSprite;
+            _hitMarker.preserveAspect = true;
             return;
         }
 
@@ -95,7 +98,9 @@ public partial class RoundController
         rt.sizeDelta = new Vector2(48f, 48f);
         rt.anchoredPosition = Vector2.zero;
         _hitMarker = go.GetComponent<Image>();
+        _hitMarker.sprite = shotFlashSprite;
         _hitMarker.color = Color.white;
+        _hitMarker.preserveAspect = true;
         _hitMarker.raycastTarget = false;
         go.SetActive(false);
     }
@@ -474,10 +479,15 @@ public partial class RoundController
             return;
         string city = _activeLevel != null ? _activeLevel.LocalizedName : ("City " + (_cityRun.CityIndex + 1));
         string enemy = _activeRound != null ? _activeRound.LocalizedEnemyName : ("Round " + _cityRun.RoundNumber);
+        SetChildText(roundStartPanel, "TitleLine/CityName", city);
         SetChildText(roundStartPanel, "CityName", city);
         SetChildText(roundStartPanel, "RoundLabel", _cityRun.RoundNumber + " / 5");
-        SetChildText(roundStartPanel, "EnemyName", enemy);
-        SetChildText(roundStartPanel, "RunDollars", "$" + _cityRun.RunDollars);
+        string numberedEnemy = $"{enemy} ({_cityRun.RoundNumber} / 5)";
+        SetChildText(roundStartPanel, "EnemyName", numberedEnemy);
+        SetChildText(roundStartPanel, "EnemyLine/EnemyName", numberedEnemy);
+        SetChildText(roundStartPanel, "Best/BestValue", "$" + CityProgress.GetBestDollars(_cityRun.CityIndex));
+        SetChildText(roundStartPanel, "RunDollars", "Your gain if you leave now");
+        SetChildText(roundStartPanel, "RunDollarsValue", "$" + _cityRun.RunDollars);
     }
 
     private void RefreshHudCounters()
@@ -523,7 +533,7 @@ public partial class RoundController
     private float CurrentEnemyReactionTime()
     {
         if (_activeRound != null)
-            return Mathf.Max(0.2f, _activeRound.enemyReactionTime);
+            return _activeRound.EnemyReactionTime;
         return 2.2f;
     }
 
@@ -641,11 +651,24 @@ public partial class RoundController
         _cityRun.RegisterWin(fact);
         RefreshHudCounters();
 
-        if (_cityRun.IsFinalRound)
+        bool final = _cityRun.IsFinalRound;
+        SetChildActive(roundWinPanel, "NextEnemyLine", !final);
+        SetChildActive(roundWinPanel, "SecuredLine", final);
+        SetChildActive(roundWinPanel, "ControlBtns/ContinueBtn", !final);
+        SetChildActive(roundWinPanel, "ControlBtns/CollectBtn", final);
+        SetChildActive(roundWinPanel, "Next", !final);
+        if (!final)
         {
-            CommitCityClearAndShowLevelComplete();
-            return;
+            int nextNumber = _cityRun.RoundNumber + 1;
+            var next = _activeLevel?.GetRound(nextNumber);
+            string nextName = next != null ? next.LocalizedEnemyName : "Enemy";
+            SetChildText(roundWinPanel, "NextEnemyLine/EnemyName", $"{nextName} ({nextNumber} / 5)");
         }
+
+        string defeated = _activeRound != null ? _activeRound.LocalizedEnemyName : "Enemy";
+        SetChildText(roundWinPanel, "TitleLine/WinLoseTitle", defeated + " Defeated");
+        SetChildText(roundWinPanel, "ResultRoundLine/Text", "Bounty for\n" + defeated);
+        SetChildText(roundWinPanel, "ResultRoundLine/Value", "$" + _cityRun.LastRoundDollars);
 
         SetPanelActive(roundWinPanel, true);
         if (roundWinPanel != null)
@@ -654,14 +677,19 @@ public partial class RoundController
         SetChildText(roundWinPanel, "Title", LocalizationTables.Get(LocalizationTables.Keys.Win));
         SetChildText(roundWinPanel, "RoundDollars", "$" + _cityRun.LastRoundDollars);
         SetChildText(roundWinPanel, "RunDollars", "$" + _cityRun.RunDollars);
-        SetChildText(roundWinPanel, "FactTime",
-            _cityRun.LastFactTime.ToString("0.00", CultureInfo.InvariantCulture) + "s");
+        SetChildText(roundWinPanel, "StarsLine/ResultText/Value", "$" + _cityRun.RunDollars);
+        string factTime = _cityRun.LastFactTime.ToString("0.00", CultureInfo.InvariantCulture) + "s";
+        SetChildText(roundWinPanel, "FactTime", factTime);
+        SetChildText(roundWinPanel, "TimeLine/ResultText", factTime);
         SceneTextLocalizer.Apply();
         RefreshMenuButtonInteractable();
     }
 
     private void PresentRoundLoseGdd10()
     {
+        string enemy = _activeRound != null ? _activeRound.LocalizedEnemyName : "The opponent";
+        SetChildText(roundLosePanel, "TitleLine/WinLoseTitle", enemy + " Defeated You");
+        SetChildText(roundLosePanel, "StarsLine/ResultText", $"You lost ${_cityRun.RunDollars}");
         _cityRun.Clear();
         SetPanelActive(roundLosePanel, true);
         if (roundLosePanel != null)
@@ -673,10 +701,16 @@ public partial class RoundController
 
     private void CommitCityClearAndShowLevelComplete()
     {
+        if (_paused || YandexGamesSdk.PlatformPaused || !_cityRun.IsFinalRound ||
+            roundWinPanel == null || !roundWinPanel.activeInHierarchy)
+            return;
+
+        SetPanelActive(roundWinPanel, false);
         int stars = _activeLevel != null
             ? _activeLevel.StarsForTotal(_cityRun.RunDollars)
             : (ScoreSystem.Instance != null ? ScoreSystem.Instance.StarsForTotal(_cityRun.RunDollars) : 0);
         float best = _cityRun.BestFactTime < float.MaxValue ? _cityRun.BestFactTime : _cityRun.LastFactTime;
+        bool isNew = _cityRun.RunDollars > CityProgress.GetBestDollars(_cityRun.CityIndex);
         CityProgress.CommitCityClear(_cityRun.CityIndex, _cityRun.RunDollars, stars, best);
 
         SetPanelActive(levelCompletePanel, true);
@@ -685,49 +719,40 @@ public partial class RoundController
 
         string city = _activeLevel != null ? _activeLevel.LocalizedName : "City";
         SetChildText(levelCompletePanel, "CityName", city);
+        SetChildText(levelCompletePanel, "TitleLine/CityNameComplete", city + " Complete!");
         SetChildText(levelCompletePanel, "TotalDollars", "$" + _cityRun.RunDollars);
-        SetChildText(levelCompletePanel, "Stars", new string('*', Mathf.Max(0, stars)).PadRight(3, '-'));
+        SetChildText(levelCompletePanel, "StarsLine/ResultText/Value", "$" + _cityRun.RunDollars);
+        SetChildText(levelCompletePanel, "EarningsLine/Value", "$" + _cityRun.RunDollars);
+        Image starsIcon = levelCompletePanel?.transform.Find("StarsLine/StarsIcon")?.GetComponent<Image>();
+        if (starsIcon != null && cityResultStars != null && stars < cityResultStars.Length)
+            starsIcon.sprite = cityResultStars[stars];
         int bestStored = CityProgress.GetBestDollars(_cityRun.CityIndex);
-        bool isNew = _cityRun.RunDollars >= bestStored;
         SetChildText(levelCompletePanel, "RecordLabel",
             isNew ? "New Record" : ("Best: $" + bestStored));
 
-        bool needNick = PlatformLeaderboards.UseHttp && !PlayerIdentity.HasNickname;
-        SetChildActive(levelCompletePanel, "InputNickname", needNick);
-        SetChildActive(levelCompletePanel, "SubmitBtn", needNick);
+        bool needNick = !PlayerIdentity.HasNickname;
+        PrepareNicknameUi(needNick);
 
         bool nextOpen = CityProgress.IsUnlocked(_cityRun.CityIndex + 1);
+        SetChildActive(levelCompletePanel, "ControlBtns/ToNextBtn", nextOpen);
         SetChildActive(levelCompletePanel, "NextCity", nextOpen);
 
         if (!needNick)
-            StartCoroutine(SubmitCityBoards());
+            HttpLeaderboards.Instance?.FlushPending();
 
         SceneTextLocalizer.Apply();
         RefreshMenuButtonInteractable();
     }
 
-    private IEnumerator SubmitCityBoards()
-    {
-        string nick = PlayerIdentity.HasNickname ? PlayerIdentity.Nickname : "Gunslinger";
-        string cityBoard = LevelSystem.CityBoardId(_cityRun.CityIndex);
-        yield return PlatformLeaderboards.Submit(cityBoard, _cityRun.RunDollars, nick);
-        yield return PlatformLeaderboards.Submit(PlatformLeaderboards.RichestBoard, CityProgress.RichestSum(), nick);
-        int fastest = CityProgress.GetFastestMs();
-        if (fastest >= 0)
-            yield return PlatformLeaderboards.Submit(PlatformLeaderboards.FastestBoard, fastest, nick);
-    }
-
     private void OnNextRoundGdd10()
     {
-        if (_paused || YandexGamesSdk.PlatformPaused)
+        if (_paused || YandexGamesSdk.PlatformPaused || _cityRun.IsFinalRound ||
+            roundWinPanel == null || !roundWinPanel.activeInHierarchy)
             return;
         _cityRun.AdvanceRound();
-        ApplyRoundPresentation();
-        RefreshRoundStartLabels();
-        RefreshHudCounters();
-        EnterWaitingToStart();
-        SetPanelActive(roundStartPanel, true);
         SetPanelActive(roundWinPanel, false);
+        EnterWaitingToStart();
+        OnStartClicked();
     }
 
     private void OnRetryCityGdd10()

@@ -238,9 +238,6 @@ public static class Gdd03Setup
 
         prop.FindPropertyRelative("button").objectReferenceValue = refs.button;
         prop.FindPropertyRelative("image").objectReferenceValue = refs.image;
-        prop.FindPropertyRelative("inactiveSprite").objectReferenceValue = refs.inactive;
-        prop.FindPropertyRelative("activeSprite").objectReferenceValue = refs.active;
-        prop.FindPropertyRelative("pressedSprite").objectReferenceValue = refs.pressed;
     }
 
     private struct TouchButtonRefs
@@ -290,6 +287,11 @@ public static class Gdd03Setup
         var button = go.GetComponent<Button>();
         button.targetGraphic = image;
         button.transition = Selectable.Transition.SpriteSwap;
+        var sprites = button.spriteState;
+        sprites.highlightedSprite = active;
+        sprites.pressedSprite = pressed;
+        sprites.disabledSprite = inactive;
+        button.spriteState = sprites;
         button.interactable = false;
 
         return new TouchButtonRefs

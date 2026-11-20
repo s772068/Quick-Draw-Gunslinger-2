@@ -96,6 +96,7 @@ public class MainMenuController : MonoBehaviour
     {
         LocalizationTables.LanguageChanged += ApplyLocalizedTexts;
         LeaderboardCache.Ready += OnLeaderboardsReady;
+        LeaderboardCache.BoardChanged += OnLeaderboardChanged;
         if (LeaderboardCache.IsReady)
             SetMenuPresented(true);
     }
@@ -104,6 +105,7 @@ public class MainMenuController : MonoBehaviour
     {
         LocalizationTables.LanguageChanged -= ApplyLocalizedTexts;
         LeaderboardCache.Ready -= OnLeaderboardsReady;
+        LeaderboardCache.BoardChanged -= OnLeaderboardChanged;
     }
 
     private void OnLeaderboardsReady()
@@ -211,21 +213,46 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
+    private Transform WorldMapPanel => worldMapRoot == null
+        ? null
+        : worldMapRoot.transform.Find("CitiesPanel") ?? worldMapRoot.transform.Find("Panel");
+
+    private static Transform FindCityRow(Transform panel, int cityIndex) =>
+        panel.Find($"CityList/CityRow_{cityIndex + 1:00}");
+
+    private static Transform FindCityPlay(Transform row) => row.Find("PlayBtn") ?? row.Find("Play");
+
     private void WireWorldMap()
     {
-        if (worldMapRoot == null)
+        Transform panel = WorldMapPanel;
+        if (panel == null)
             return;
 
-        WireButton(worldMapRoot.transform, "Panel/Back", HideWorldMap);
-        WireButton(worldMapRoot.transform, "Panel/FastestBtn", () => ShowLeaderboardsOverlay(richest: false));
-        WireButton(worldMapRoot.transform, "Panel/RichestBlock/RichestBtn", () => ShowLeaderboardsOverlay(richest: true));
-
-        for (int i = 1; i <= 3; i++)
+        WireButton(panel, "Back", HideWorldMap);
+        WireButton(panel, "FastestBtn", () => ShowLeaderboardsOverlay(richest: false));
+        UnityEngine.Events.UnityAction showRichest = () => ShowLeaderboardsOverlay(richest: true);
+        WireButton(panel, "RichestBlock/RichestBtn", showRichest);
+        Transform richestRow = panel.Find("Richest_Row");
+        if (richestRow != null)
         {
-            int cityIndex = i - 1;
-            string row = $"Panel/CityList/CityRow_0{i}";
-            WireButton(worldMapRoot.transform, row + "/Play", () => StartCity(cityIndex));
-            WireButton(worldMapRoot.transform, row + "/ServerBestBtn", () => ShowCityLeaderboard(cityIndex));
+            foreach (Button button in richestRow.GetComponentsInChildren<Button>(true))
+                WireButton(button.transform, showRichest);
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            int cityIndex = i;
+            Transform row = FindCityRow(panel, cityIndex);
+            if (row == null)
+                continue;
+
+            UnityEngine.Events.UnityAction play = () => StartCity(cityIndex, gameSceneName);
+            UnityEngine.Events.UnityAction showBoard = () => ShowCityLeaderboard(cityIndex);
+            WireButton(FindCityPlay(row), play);
+            WireButton(row, "LevelIcon", play);
+            WireButton(row, "ServerBestBtn", showBoard);
+            WireButton(row, "ServerBest/ServerBestIcon", showBoard);
+            WireButton(row, "Stars/StarsIcon", showBoard);
         }
     }
 
@@ -242,12 +269,14 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
-    private static void WireButton(Transform root, string path, UnityEngine.Events.UnityAction action)
+    private static void WireButton(Transform root, string path, UnityEngine.Events.UnityAction action) =>
+        WireButton(root.Find(path), action);
+
+    private static void WireButton(Transform target, UnityEngine.Events.UnityAction action)
     {
-        Transform t = root.Find(path);
-        if (t == null)
+        if (target == null)
             return;
-        var button = t.GetComponent<Button>();
+        var button = target.GetComponent<Button>();
         if (button == null)
             return;
         button.onClick.RemoveAllListeners();
@@ -272,10 +301,11 @@ public class MainMenuController : MonoBehaviour
 
     private void ApplyTownsTitle()
     {
-        if (worldMapRoot == null)
+        Transform panel = WorldMapPanel;
+        if (panel == null)
             return;
 
-        Transform title = worldMapRoot.transform.Find("Panel/Title");
+        Transform title = panel.Find("TitlePanel/Title") ?? panel.Find("Title");
         if (title == null)
             return;
 
@@ -288,7 +318,7 @@ public class MainMenuController : MonoBehaviour
     {
         if (TrainingSession.IsFirstLaunch)
         {
-            StartTraining(silentModals: false);
+            StartTraining(gameSceneName);
             return;
         }
 
@@ -306,42 +336,41 @@ public class MainMenuController : MonoBehaviour
 
     private void OnTrainingClicked()
     {
-        StartTraining(silentModals: false);
+        StartTraining(gameSceneName);
     }
 
-    private void StartTraining(bool silentModals)
+    internal static void StartTraining(string gameSceneName)
     {
-        TrainingSession.RequestStart(silentModals);
+        TrainingSession.RequestStart();
         SceneManager.LoadScene(gameSceneName);
     }
 
     private void RefreshWorldMapProgress()
     {
-        if (worldMapRoot == null)
+        Transform panel = WorldMapPanel;
+        if (panel == null)
             return;
 
-        string[] names = { "Dry Creek", "Dead Well", "Raven Rock" };
-        RefreshNetWorthStars();
+        RefreshNetWorthStars(panel);
 
-        for (int i = 1; i <= 3; i++)
+        for (int city = 0; city < 3; city++)
         {
-            int city = i - 1;
-            Transform row = worldMapRoot.transform.Find($"Panel/CityList/CityRow_0{i}");
+            Transform row = FindCityRow(panel, city);
             if (row == null)
                 continue;
 
             bool unlocked = CityProgress.IsUnlocked(city);
-            SetTmp(row, "Name", names[city]);
+            string name = CityName(city);
+            string best = "$" + CityProgress.GetBestDollars(city);
+            SetTmp(row, "Name", name);
+            SetTmp(row, "LevelName", name);
             SetTmp(row, "Stars", CityProgress.GetStars(city).ToString());
-            SetTmp(row, "PlayerBest", "$" + CityProgress.GetBestDollars(city));
+            SetTmp(row, "PlayerBest", best);
+            SetTmp(row, "Stars/PlayerBestValue", best);
+            SetTmp(row, "ServerBest/PlayerBestValue", "$" + GetCachedBest(LevelSystem.CityBoardId(city)));
 
-            var play = row.Find("Play");
-            if (play != null)
-            {
-                var btn = play.GetComponent<Button>();
-                if (btn != null)
-                    btn.interactable = unlocked;
-            }
+            SetInteractable(FindCityPlay(row), unlocked);
+            SetInteractable(row.Find("LevelIcon"), unlocked);
 
             var canvasGroup = row.GetComponent<CanvasGroup>();
             if (canvasGroup == null)
@@ -349,13 +378,25 @@ public class MainMenuController : MonoBehaviour
             canvasGroup.alpha = unlocked ? 1f : 0.45f;
         }
 
-        Transform richest = worldMapRoot.transform.Find("Panel/RichestBlock/RichestValue");
-        if (richest != null)
-        {
-            var text = richest.GetComponent<TMP_Text>();
-            if (text != null)
-                text.text = "$" + CityProgress.RichestSum();
-        }
+        string netWorth = "$" + CityProgress.RichestSum();
+        SetTmp(panel, "RichestBlock/RichestValue", netWorth);
+        SetTmp(panel, "Richest_Row/Stars/PlayerBestValue", netWorth);
+        SetTmp(panel, "Richest_Row/ServerBest/PlayerBestValue", "$" + GetCachedBest(HttpLeaderboards.RichestBoard));
+    }
+
+    private static int GetCachedBest(string board)
+    {
+        if (LeaderboardCache.TryGet(board, out YandexLeaderboards.BoardPage page)
+            && page.Ok && page.Entries != null && page.Entries.Length > 0)
+            return page.Entries[0].Score;
+
+        return 0;
+    }
+
+    private static void SetInteractable(Transform target, bool interactable)
+    {
+        if (target != null && target.TryGetComponent(out Button button))
+            button.interactable = interactable;
     }
 
     private static void SetTmp(Transform row, string child, string value)
@@ -375,12 +416,41 @@ public class MainMenuController : MonoBehaviour
         SetPanel(leaderboardsOverlayRoot, false);
     }
 
+    private int _leaderboardCityIndex;
+
+    private void OnLeaderboardChanged(string board)
+    {
+        RefreshWorldMapProgress();
+        if (cityLeaderboardRoot != null && cityLeaderboardRoot.activeInHierarchy
+            && board == LevelSystem.CityBoardId(_leaderboardCityIndex))
+            RenderCityLeaderboard(_leaderboardCityIndex);
+
+        if (leaderboardsOverlayRoot != null && leaderboardsOverlayRoot.activeInHierarchy)
+        {
+            if (board == HttpLeaderboards.RichestBoard)
+                FillCachedBoard(leaderboardsOverlayRoot.transform.Find("Panel/RichestPanel"), board, money: true);
+            if (board == HttpLeaderboards.FastestBoard)
+                FillCachedBoard(leaderboardsOverlayRoot.transform.Find("Panel/FastestHandPanel"), board, money: false);
+        }
+    }
+
     private void ShowCityLeaderboard(int cityIndex)
     {
         if (cityLeaderboardRoot == null)
             return;
 
-        Transform title = cityLeaderboardRoot.transform.Find("Panel/Title");
+        _leaderboardCityIndex = cityIndex;
+        RenderCityLeaderboard(cityIndex);
+        SetPanel(cityLeaderboardRoot, true);
+        cityLeaderboardRoot.transform.SetAsLastSibling();
+        LeaderboardCache.Refresh(LevelSystem.CityBoardId(cityIndex));
+    }
+
+    private void RenderCityLeaderboard(int cityIndex)
+    {
+        string board = LevelSystem.CityBoardId(cityIndex);
+        Transform title = cityLeaderboardRoot.transform.Find("Panel/TitlePanel/Title")
+                          ?? cityLeaderboardRoot.transform.Find("Panel/Title");
         if (title != null)
         {
             var text = title.GetComponent<TMP_Text>();
@@ -395,18 +465,15 @@ public class MainMenuController : MonoBehaviour
         {
             var text = player.GetComponent<TMP_Text>();
             if (text != null)
-                text.text = "You: $" + CityProgress.GetBestDollars(cityIndex);
+                text.text = FormatPlayerResult(board, "$" + CityProgress.GetBestDollars(cityIndex));
         }
 
         if (list != null)
         {
             var text = list.GetComponent<TMP_Text>();
             if (text != null)
-                text.text = FormatCachedBoard(LevelSystem.CityBoardId(cityIndex), money: true);
+                text.text = FormatCachedBoard(board, money: true);
         }
-
-        SetPanel(cityLeaderboardRoot, true);
-        cityLeaderboardRoot.transform.SetAsLastSibling();
     }
 
     private void ShowLeaderboardsOverlay(bool richest)
@@ -426,6 +493,7 @@ public class MainMenuController : MonoBehaviour
 
         SetPanel(leaderboardsOverlayRoot, true);
         leaderboardsOverlayRoot.transform.SetAsLastSibling();
+        LeaderboardCache.Refresh(richest ? HttpLeaderboards.RichestBoard : HttpLeaderboards.FastestBoard);
     }
 
     private static void FillCachedBoard(Transform panel, string board, bool money)
@@ -451,22 +519,31 @@ public class MainMenuController : MonoBehaviour
 
         if (money)
         {
-            playerText.text = "You: $" + CityProgress.RichestSum();
+            playerText.text = FormatPlayerResult(board, "$" + CityProgress.RichestSum());
             return;
         }
 
         int ms = CityProgress.GetFastestMs();
-        playerText.text = ms < 0
-            ? "You: —"
-            : "You: " + SeriesRun.FormatSeconds(ms / 1000f) + "s";
+        playerText.text = FormatPlayerResult(board, ms < 0
+            ? "0"
+            : SeriesRun.FormatSeconds(ms / 1000f) + "s");
+    }
+
+    private static string FormatPlayerResult(string board, string score)
+    {
+        string player = LocalizationTables.IsRussian ? "Вы " : "You ";
+        if (LeaderboardCache.TryGet(board, out var page) && page.Ok && page.UserRank > 0)
+            player += "#" + page.UserRank + " ";
+        return player + score;
     }
 
     private static string FormatCachedBoard(string board, bool money)
     {
-        if (!LeaderboardCache.TryGet(board, out YandexLeaderboards.BoardPage page)
-            || !page.Ok
-            || page.Entries == null
-            || page.Entries.Length == 0)
+        if (!LeaderboardCache.TryGet(board, out YandexLeaderboards.BoardPage page))
+            return LocalizationTables.IsRussian ? "Загрузка…" : "Loading…";
+        if (!page.Ok)
+            return LocalizationTables.IsRussian ? "Таблица недоступна" : "Leaderboard unavailable";
+        if (page.Entries == null || page.Entries.Length == 0)
             return "0";
 
         var sb = new System.Text.StringBuilder();
@@ -485,21 +562,22 @@ public class MainMenuController : MonoBehaviour
         return sb.ToString();
     }
 
-    private void StartCity(int cityIndex)
+    internal static void StartCity(int cityIndex, string gameSceneName)
     {
+        if (cityIndex < 0 || cityIndex >= 3 || !CityProgress.IsUnlocked(cityIndex))
+            return;
+
+        TrainingSession.CancelPending();
         PlayerPrefs.SetInt(SelectedCityPrefsKey, cityIndex);
         PlayerPrefs.Save();
         PlatformAds.ShowInterstitial();
         SceneManager.LoadScene(gameSceneName);
     }
 
-    private void RefreshNetWorthStars()
+    private static void RefreshNetWorthStars(Transform panel)
     {
-        if (worldMapRoot == null)
-            return;
-
-        Transform stars = worldMapRoot.transform.Find("Panel/RichestBlock/Stars")
-                         ?? worldMapRoot.transform.Find("Panel/RichestBlock/NetWorthStars");
+        Transform stars = panel.Find("RichestBlock/Stars")
+                         ?? panel.Find("RichestBlock/NetWorthStars");
         if (stars == null)
             return;
 

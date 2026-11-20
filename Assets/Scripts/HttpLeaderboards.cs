@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 /// <summary>
-/// Cloudflare Worker leaderboards (GDD 0.92). Boards: sure / fastest / steady.
+/// Cloudflare Worker leaderboards and persistent delivery of completed city records.
 /// </summary>
 public class HttpLeaderboards : MonoBehaviour
 {
@@ -17,6 +17,81 @@ public class HttpLeaderboards : MonoBehaviour
     private const string BaseUrl = "https://qdg2-leaderboards.s772068.workers.dev";
 
     public static HttpLeaderboards Instance { get; private set; }
+
+    private static readonly string[] CityBoards =
+    {
+        LevelSystem.CityBoardId(0), LevelSystem.CityBoardId(1), LevelSystem.CityBoardId(2)
+    };
+    private static readonly string[] PendingBoards =
+    {
+        CityBoards[0], CityBoards[1], CityBoards[2], FastestBoard
+    };
+    private bool _flushing;
+
+    private static string PendingKey(string board) => "QDG2_LeaderboardPending_" + board;
+    private static string ConfirmedKey(string board) => "QDG2_LeaderboardConfirmed_" + board;
+
+    private static void QueueRecord(string board, int score)
+    {
+        if (PlayerPrefs.GetInt(ConfirmedKey(board), -1) != score)
+            PlayerPrefs.SetInt(PendingKey(board), score);
+    }
+
+    public static void QueueCityClear(int cityIndex)
+    {
+        for (int i = 0; i < CityBoards.Length; i++)
+        {
+            int best = CityProgress.GetBestDollars(i);
+            if (i == cityIndex || best > 0)
+                QueueRecord(CityBoards[i], best);
+        }
+        int fastest = CityProgress.GetFastestMs();
+        if (fastest >= 0)
+            QueueRecord(FastestBoard, fastest);
+        PlayerPrefs.Save();
+    }
+
+    private IEnumerator Start()
+    {
+        while (true)
+        {
+            FlushPending();
+            yield return new WaitForSecondsRealtime(30f);
+        }
+    }
+
+    public void FlushPending()
+    {
+        if (!_flushing && PlayerIdentity.HasNickname)
+            StartCoroutine(DeliverPending());
+    }
+
+    private IEnumerator DeliverPending()
+    {
+        _flushing = true;
+        string nick = PlayerIdentity.Nickname;
+        foreach (string board in PendingBoards)
+        {
+            string key = PendingKey(board);
+            if (!PlayerPrefs.HasKey(key))
+                continue;
+
+            int score = PlayerPrefs.GetInt(key);
+            bool acknowledged = false;
+            yield return Submit(board, score, nick, ok => acknowledged = ok);
+            if (!acknowledged)
+                continue;
+
+            PlayerPrefs.SetInt(ConfirmedKey(board), score);
+            if (PlayerPrefs.GetInt(key) == score)
+                PlayerPrefs.DeleteKey(key);
+            PlayerPrefs.Save();
+            LeaderboardCache.Refresh(board);
+            if (board != FastestBoard)
+                LeaderboardCache.Refresh(RichestBoard);
+        }
+        _flushing = false;
+    }
 
     [Serializable]
     private class BoardResponse
@@ -108,7 +183,7 @@ public class HttpLeaderboards : MonoBehaviour
         StartCoroutine(LoadRoutine(board, page => callback?.Invoke(page.Ok ? page.UserRank : 0)));
     }
 
-    public IEnumerator Submit(string board, int score, string name)
+    public IEnumerator Submit(string board, int score, string name, Action<bool> completed = null)
     {
         string nick = PlayerIdentity.SanitizeName(name);
         if (string.IsNullOrEmpty(nick))
@@ -154,6 +229,7 @@ public class HttpLeaderboards : MonoBehaviour
 
             if (parsed == null || !parsed.ok)
                 Debug.LogWarning("HttpLeaderboards submit rejected for " + board);
+            completed?.Invoke(parsed != null && parsed.ok);
         }
     }
 

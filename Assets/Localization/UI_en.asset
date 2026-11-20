@@ -183,7 +183,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 17720766727446532
-    m_Localized: Cock the hammer!
+    m_Localized: Pull the hammer!
     m_Metadata:
       m_Items: []
   - m_Id: 17720766727446533
@@ -195,8 +195,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 17720766727446535
-    m_Localized: "You hit the enemy. Training is done \u2014 but in a real duel you
-      must finish before the enemy shoots!"
+    m_Localized: "Nice shot! In a real duel, you'll need to shoot first."
     m_Metadata:
       m_Items: []
   - m_Id: 17720766727446536

@@ -187,13 +187,13 @@ public class MenuLeaderboardPanel : MonoBehaviour
 
     private void BuildSamples()
     {
-        AddSample("SampleRow1", "1", "Вячеслав", "96", false);
-        AddSample("SampleRow2", "2", "Нина Сергеева", "92", false);
-        AddSample("SampleRow3", "3", "Инкогнито 0094", "92", false);
+        AddSample("SampleRow1", "1", "Vyacheslav", "96", false);
+        AddSample("SampleRow2", "2", "Nina Sergeeva", "92", false);
+        AddSample("SampleRow3", "3", "Incognito 0094", "92", false);
         AddSample("SampleWave", "", "~~~~~~~~~~~~", "", true);
-        AddSample("SampleRow4", "40335", "Дима Б.", "4", false);
-        AddSample("SampleRow5", "40336", "Мария Лаврова", "4", false);
-        AddSample("SampleRow6", "40337", "Денис Ракша", "4", false);
+        AddSample("SampleRow4", "40335", "Dima B.", "4", false);
+        AddSample("SampleRow5", "40336", "Maria Lavrova", "4", false);
+        AddSample("SampleRow6", "40337", "Denis Raksha", "4", false);
         if (_localBest != null)
             _localBest.transform.SetAsLastSibling();
     }

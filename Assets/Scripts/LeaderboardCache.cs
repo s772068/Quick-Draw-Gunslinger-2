@@ -11,9 +11,34 @@ public class LeaderboardCache : MonoBehaviour
 {
     public static bool IsReady { get; private set; }
     public static event Action Ready;
+    public static event Action<string> BoardChanged;
 
     private static readonly Dictionary<string, YandexLeaderboards.BoardPage> Pages =
         new Dictionary<string, YandexLeaderboards.BoardPage>();
+    private static readonly Dictionary<string, int> Requests = new Dictionary<string, int>();
+
+    public static void Refresh(string board, Action finished = null)
+    {
+        if (HttpLeaderboards.Instance == null)
+        {
+            finished?.Invoke();
+            return;
+        }
+
+        Requests.TryGetValue(board, out int previous);
+        int request = previous + 1;
+        Requests[board] = request;
+        HttpLeaderboards.Instance.LoadBoard(board, page =>
+        {
+            if (Requests[board] == request)
+            {
+                if (page.Ok || !Pages.TryGetValue(board, out var cached) || !cached.Ok)
+                    Pages[board] = page;
+                BoardChanged?.Invoke(board);
+            }
+            finished?.Invoke();
+        });
+    }
 
     private static bool _bootStarted;
     private const float LoadTimeoutSeconds = 8f;
@@ -84,11 +109,7 @@ public class LeaderboardCache : MonoBehaviour
                 continue;
 
             pending++;
-            HttpLeaderboards.Instance.LoadBoard(id, page =>
-            {
-                Pages[id] = page;
-                pending--;
-            });
+            Refresh(id, () => pending--);
         }
 
         float wait = 0f;

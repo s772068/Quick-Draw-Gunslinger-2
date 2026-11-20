@@ -75,6 +75,16 @@ public partial class RoundController
         SetPanelActive(levelCompletePanel, false);
         SetPanelActive(areYouSureAbortPanel, false);
 
+        WireChild(roundStartPanel, "ControlBtns/ContinueBtn", OnStartClicked);
+        WireChild(roundStartPanel, "ControlBtns/ExitBtn", OnAbortToMapClicked);
+        WireChild(roundWinPanel, "ControlBtns/ContinueBtn", OnNextRoundGdd10);
+        WireChild(roundWinPanel, "ControlBtns/CollectBtn", CommitCityClearAndShowLevelComplete);
+        WireChild(roundLosePanel, "ControlBtns/RetryBtn", OnRetryCityGdd10);
+        WireChild(roundLosePanel, "ControlBtns/ExitBtn", OnPauseExitClicked);
+        WireChild(areYouSureAbortPanel, "ControlBtns/ExitBtn", OnAbortConfirmedClicked);
+        WireChild(areYouSureAbortPanel, "ControlBtns/ContinueBtn", OnNoClicked);
+        WireChild(levelCompletePanel, "ControlBtns/ExitBtn", OnPauseExitClicked);
+        WireChild(levelCompletePanel, "ControlBtns/ToNextBtn", OnNextCityGdd10);
         WireChild(roundStartPanel, "ExitBtn", OnAbortToMapClicked);
         WireChild(roundStartPanel, "Map", OnAbortToMapClicked);
         WireChild(roundWinPanel, "Next", OnNextRoundGdd10);
@@ -86,7 +96,8 @@ public partial class RoundController
         WireChild(levelCompletePanel, "Retry", OnRetryCityGdd10);
         WireChild(levelCompletePanel, "Map", OnPauseExitClicked);
         WireChild(levelCompletePanel, "NextCity", OnNextCityGdd10);
-        WireChild(levelCompletePanel, "SubmitBtn", OnHttpSubmitClicked);
+        WireChild(levelCompletePanel, "SubmitPanel/SubmitBtn", OnHttpSubmitClicked);
+        WireChild(levelCompletePanel, "SubmitLine/SubmitBtn", OnHttpSubmitClicked);
         RefreshCounters();
     }
 
@@ -97,11 +108,13 @@ public partial class RoundController
         if (levelCompletePanel == null)
             return;
 
-        Transform input = levelCompletePanel.transform.Find("InputNickname");
+        Transform input = levelCompletePanel.transform.Find("SubmitLine/InputNickname")
+                          ?? levelCompletePanel.transform.Find("SubmitPanel/InputNickname");
         if (input != null)
             _nicknameInput = input.GetComponent<TMP_InputField>();
 
-        Transform submit = levelCompletePanel.transform.Find("SubmitBtn");
+        Transform submit = levelCompletePanel.transform.Find("SubmitLine/SubmitBtn")
+                           ?? levelCompletePanel.transform.Find("SubmitPanel/SubmitBtn");
         if (submit != null)
             _httpSubmitBtn = submit.GetComponent<Button>();
     }
@@ -117,6 +130,12 @@ public partial class RoundController
             return;
         }
 
+        ShowAbortConfirmation();
+    }
+
+    private void ShowAbortConfirmation()
+    {
+        SetChildText(areYouSureAbortPanel, "Burned/ResultText", $"You will lose ${_cityRun.RunDollars}");
         SetPanelActive(areYouSureAbortPanel, true);
         areYouSureAbortPanel.transform.SetAsLastSibling();
         RefreshMenuButtonInteractable();
@@ -187,6 +206,14 @@ public partial class RoundController
 
         bool win = _outcome == RoundOutcome.Win;
         string title = LocalizationTables.Get(win ? LocalizationTables.Keys.Win : LocalizationTables.Keys.Lose);
+        string enemy = _activeRound?.LocalizedEnemyName;
+        if (!string.IsNullOrEmpty(enemy))
+        {
+            string result = LocalizationTables.Language == "ru"
+                ? (win ? $"Победа над {enemy}" : $"Поражение в дуэли с {enemy}")
+                : (win ? $"{enemy} Defeated" : $"{enemy} Defeated You");
+            SetChildText(win ? roundWinPanel : roundLosePanel, "TitleLine/WinLoseTitle", result);
+        }
         if (roundResultText != null)
             roundResultText.text = title;
 
@@ -233,22 +260,11 @@ public partial class RoundController
         if (roundWinPanel == null || !roundWinPanel.activeInHierarchy)
             return;
 
-        Transform nextBtn = roundWinPanel.transform.Find("Next");
+        Transform nextBtn = roundWinPanel.transform.Find("ControlBtns/ContinueBtn") ?? roundWinPanel.transform.Find("Next");
         if (nextBtn == null || !nextBtn.gameObject.activeInHierarchy)
             return;
 
-        OnContinueSeriesClicked();
-    }
-
-    private void OnContinueSeriesClicked()
-    {
-        if (_paused || YandexGamesSdk.PlatformPaused)
-            return;
-
-        EnterWaitingToStart();
-        SetPanelActive(roundStartPanel, false);
-        RefreshCounters();
-        OnStartClicked();
+        OnNextRoundGdd10();
     }
 
     private void OnRestartSeriesClicked()
@@ -281,12 +297,18 @@ public partial class RoundController
     {
         SetPanelActive(areYouSureAbortPanel, false);
         SetPanelActive(_areYouSure, false);
+        if (_paused && pauseMenuRoot != null)
+        {
+            pauseMenuRoot.transform.SetAsLastSibling();
+            SetPanelActive(pauseMenuRoot, true);
+        }
+
         RefreshMenuButtonInteractable();
     }
 
     private void OnHttpSubmitClicked()
     {
-        if (_submitting || !PlatformLeaderboards.UseHttp)
+        if (_submitting || levelCompletePanel == null || !levelCompletePanel.activeInHierarchy)
             return;
 
         string nick = _nicknameInput != null ? _nicknameInput.text : PlayerIdentity.Nickname;
@@ -298,12 +320,22 @@ public partial class RoundController
         }
 
         PlayerIdentity.Nickname = nick;
-        if (_nicknameInput != null)
-            _nicknameInput.text = nick;
-
-        SetChildActive(levelCompletePanel, "InputNickname", false);
-        SetChildActive(levelCompletePanel, "SubmitBtn", false);
-        StartCoroutine(SubmitCityBoards());
+        SetChildActive(levelCompletePanel, "SubmitPanel", false);
+        var nicknameLabel = levelCompletePanel.transform.Find("SubmitLine/Nickname")?.GetComponent<TMP_Text>();
+        if (nicknameLabel != null)
+        {
+            nicknameLabel.richText = false;
+            nicknameLabel.text = nick + " submitted";
+            SetChildActive(levelCompletePanel, "SubmitLine/InputNickname", false);
+            SetChildActive(levelCompletePanel, "SubmitLine/SubmitBtn", false);
+            nicknameLabel.gameObject.SetActive(true);
+        }
+        else
+        {
+            SetChildActive(levelCompletePanel, "SubmitLine", false);
+        }
+        SetChildActive(levelCompletePanel, "RecordedPanel", true);
+        HttpLeaderboards.Instance?.FlushPending();
     }
 
     private void OnLoginClicked()
@@ -360,6 +392,7 @@ public partial class RoundController
             levelCompletePanel.transform.SetAsLastSibling();
 
         RefreshCounters();
+        SetChildButtonInteractable(levelCompletePanel, "ControlBtns/ExitBtn", true);
         SetChildButtonInteractable(levelCompletePanel, "Retry", true);
         SetChildButtonInteractable(levelCompletePanel, "Map", true);
         SetChildButtonInteractable(levelCompletePanel, "NextCity", true);
@@ -379,8 +412,12 @@ public partial class RoundController
     private void PrepareNicknameUi(bool showHttpSubmit)
     {
         CacheNicknameUi();
-        SetChildActive(levelCompletePanel, "InputNickname", showHttpSubmit);
-        SetChildActive(levelCompletePanel, "SubmitBtn", showHttpSubmit);
+        SetChildActive(levelCompletePanel, "SubmitLine/InputNickname", showHttpSubmit);
+        SetChildActive(levelCompletePanel, "SubmitLine/SubmitBtn", showHttpSubmit);
+        SetChildActive(levelCompletePanel, "SubmitLine/Nickname", false);
+        SetChildActive(levelCompletePanel, "SubmitPanel", showHttpSubmit);
+        SetChildActive(levelCompletePanel, "SubmitLine", showHttpSubmit);
+        SetChildActive(levelCompletePanel, "RecordedPanel", !showHttpSubmit);
 
         if (!showHttpSubmit)
             return;

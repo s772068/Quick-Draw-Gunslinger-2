@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7ec7721e6fa434e86e836aae1223f58, type: 3}
+  m_Name: MenuUiSkin
+  m_EditorClassIdentifier: Assembly-CSharp::MenuUiSkin
+  button: {fileID: 21300000, guid: 7f88627145a94029999856db500d42c5, type: 3}
+  pressedButton: {fileID: 21300000, guid: 91fd6413fd974ceb83064e21ff8d9293, type: 3}
+  panel: {fileID: 21300000, guid: c16bf1986e8161044822a80b6ea2f099, type: 3}

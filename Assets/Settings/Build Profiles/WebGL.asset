@@ -22,7 +22,7 @@ MonoBehaviour:
   m_Scenes:
   - m_enabled: 1
     m_path: Assets/Scenes/MainMenu.unity
-    m_guid: f1e2d3c4b5a697887766554433221100
+    m_guid: 8fd1cafc60d243c7856935e39a1d8d86
   - m_enabled: 1
     m_path: Assets/Scenes/GameScene.unity
     m_guid: eb8e2fb2f5ed4444e9dc04aef9dbfead

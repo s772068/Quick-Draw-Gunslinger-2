@@ -9,9 +9,28 @@ public static class TrainingSession
     public const string PendingKey = "QDG2_TrainingPending";
     public const int TrainingLevelIndex = 3;
 
+    private static bool _simulateFirstLaunch;
+    private static bool _simulationUsed;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetSimulation()
+    {
+        _simulateFirstLaunch = false;
+        _simulationUsed = false;
+    }
+
+    internal static void SimulateFirstLaunch()
+    {
+        if (_simulationUsed)
+            return;
+
+        _simulationUsed = true;
+        _simulateFirstLaunch = true;
+    }
+
     public static bool IsFirstLaunch
     {
-        get => PlayerPrefs.GetInt(FirstLaunchKey, 1) != 0;
+        get => _simulateFirstLaunch || PlayerPrefs.GetInt(FirstLaunchKey, 1) != 0;
         set
         {
             PlayerPrefs.SetInt(FirstLaunchKey, value ? 1 : 0);
@@ -38,6 +57,12 @@ public static class TrainingSession
         Pending = true;
     }
 
+    internal static void CancelPending()
+    {
+        if (Pending)
+            Pending = false;
+    }
+
     public static bool ConsumePending()
     {
         if (!Pending)
@@ -54,6 +79,7 @@ public static class TrainingSession
     public static void MarkCompletedAndExit()
     {
         IsFirstLaunch = false;
+        _simulateFirstLaunch = false;
         SilentModals = false;
         Active = false;
         Pending = false;

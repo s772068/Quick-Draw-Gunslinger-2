@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -21,24 +23,20 @@ public partial class RoundController
     private bool _trainingActive;
     private bool _trainingSilent;
     private bool _trainingFrozen;
-    private bool _trainingDrawLocked;
-    private bool _trainingFireLocked;
     private bool _trainingStopAtMiddle;
     private bool _trainingAwaitingMiddle;
     private TrainingAllow _trainingAllowed = TrainingAllow.None;
     private Coroutine _trainingRoutine;
 
     private GameObject _trainingRoot;
-    private Image _trainingOverlay;
-    private RectTransform _trainingHighlightHost;
+    private TrainingShadeGraphic _trainingOverlay;
+    private readonly Vector3[] _trainingHighlightCorners = new Vector3[4];
+    private Func<GameObject> _findTrainingHighlight;
     private GameObject _trainingModal;
     private TMP_Text _trainingBody;
     private Button _trainingOk;
     private Button _trainingRetry;
     private Button _trainingReady;
-    private Transform _highlightOriginalParent;
-    private int _highlightOriginalSibling;
-    private GameObject _highlightedObject;
 
     private void BindGdd12Training()
     {
@@ -55,6 +53,7 @@ public partial class RoundController
     }
 
     private bool IsTraining => _trainingActive;
+    private bool TrainingPaused => _paused || YandexGamesSdk.PlatformPaused;
 
     private void ApplyTrainingLevelPresentation()
     {
@@ -93,7 +92,7 @@ public partial class RoundController
             }
         }
 
-        var all = Object.FindObjectsByType<LevelDefinition>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var all = FindObjectsByType<LevelDefinition>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         for (int i = 0; i < all.Length; i++)
         {
             if (all[i] != null && all[i].cityId == "training")
@@ -121,10 +120,27 @@ public partial class RoundController
 
     private IEnumerator TrainingSequenceRoutine()
     {
+        while (true)
+        {
+            yield return PlayTrainingAttempt();
+            bool retry = false;
+            yield return ShowTrainingHitModal(() => retry = true);
+            if (!retry)
+                break;
+
+            _trainingSilent = true;
+        }
+
+        _trainingRoutine = null;
+        OnPauseExitClicked();
+    }
+
+    private IEnumerator PlayTrainingAttempt()
+    {
         _phase = Phase.WaitingToStart;
         _bellFired = false;
-        _trainingDrawLocked = true;
-        _trainingFireLocked = true;
+        _trainingAllowed = TrainingAllow.None;
+        _trainingFrozen = false;
         _trainingStopAtMiddle = true;
         _trainingAwaitingMiddle = false;
         StopBellRoutine();
@@ -133,6 +149,7 @@ public partial class RoundController
         StopGunFxRoutine();
         SetVisible(playerGun, false);
         SetVisible(crossfire != null ? crossfire.gameObject : null, false);
+        SetVisible(_hitMarker != null ? _hitMarker.gameObject : null, false);
         SetAimDim(false);
         ResetCrossfireToStart();
         SetBellState(fired: false);
@@ -144,12 +161,7 @@ public partial class RoundController
             _gunAim.SetAiming(false);
         }
 
-        SetActionState(_drawActions, ActionVisualState.Inactive);
-        SetActionState(_pullActions, ActionVisualState.Inactive);
-        SetActionState(_fireActions, ActionVisualState.Inactive);
-        SetIndicatorVisual(drawButton, ActionVisualState.Inactive);
-        SetIndicatorVisual(pullButton, ActionVisualState.Inactive);
-        SetIndicatorVisual(fireButton, ActionVisualState.Inactive);
+        RefreshTrainingActions();
         RefreshMenuButtonInteractable();
         WarmUpAudio();
         YandexGamesSdk.GameplayStart();
@@ -158,25 +170,21 @@ public partial class RoundController
         // 1) Wait for bell — on silent retry the 1.5s Ok-substitute IS the Bell delay (not doubled).
         if (_trainingSilent)
         {
-            ShowTrainingOverlayOnly(FindBellHighlightTarget());
+            ShowTrainingOverlayOnly(FindBellHighlightTarget);
             _trainingFrozen = true;
-            _trainingAllowed = TrainingAllow.None;
             yield return TrainingWait(1.5f);
             _trainingFrozen = false;
-            ClearTrainingHighlight();
             HideTrainingModal();
         }
         else
         {
             yield return ShowTrainingStep(
                 LocalizationTables.Keys.ModalWait,
-                FindBellHighlightTarget(),
-                TrainingAllow.Ok,
-                requireOk: true);
+                FindBellHighlightTarget,
+                TrainingAllow.Ok);
             yield return TrainingWait(1.5f);
         }
 
-        _phase = Phase.WaitingForBell;
         _bellFired = true;
         _phase = Phase.BellShown;
         MarkDuelTimer();
@@ -187,142 +195,94 @@ public partial class RoundController
         // No enemy shoot loop in training.
 
         // 2) Draw
-        _trainingDrawLocked = false;
-        SetActionState(_drawActions, ActionVisualState.Active);
-        SetIndicatorVisual(drawButton, ActionVisualState.Active);
         yield return ShowTrainingStep(
             LocalizationTables.Keys.ModalDraw,
-            FindActionHighlightTarget(_drawActions, drawButton),
-            TrainingAllow.Draw,
-            requireOk: false);
-        while (_phase == Phase.BellShown)
-            yield return null;
-        ClearTrainingHighlight();
-        HideTrainingModal();
+            () => FindActionHighlightTarget(_drawActions, drawButton),
+            TrainingAllow.Draw);
 
-        // 3) Pull
+        // 3) Pull. The crosshair can start moving as soon as Pull is accepted on a retry.
+        _trainingAwaitingMiddle = true;
         yield return ShowTrainingStep(
             LocalizationTables.Keys.ModalPull,
-            FindActionHighlightTarget(_pullActions, pullButton),
-            TrainingAllow.Pull,
-            requireOk: false);
-        while (_phase == Phase.Drawn)
-            yield return null;
-        ClearTrainingHighlight();
-        HideTrainingModal();
+            () => FindActionHighlightTarget(_pullActions, pullButton),
+            TrainingAllow.Pull);
 
-        // 4) Aim — Ok then unpause and move; Fire locked until middle
-        _trainingFireLocked = true;
-        yield return ShowTrainingStep(
-            LocalizationTables.Keys.ModalAim,
-            null,
-            TrainingAllow.Ok,
-            requireOk: true);
-        _trainingAwaitingMiddle = true;
+        // 4) The first pass explains aiming before releasing the crosshair.
+        if (!_trainingSilent)
+        {
+            ShowTrainingModal(LocalizationTables.Get(LocalizationTables.Keys.ModalAim),
+                null, showOk: false, showHitButtons: false);
+            yield return TrainingWait(1.5f);
+            HideTrainingModal();
+            _trainingFrozen = false;
+        }
+
         while (_trainingAwaitingMiddle && (_phase == Phase.Aimed || _phase == Phase.AimedAfterMiss))
             yield return null;
 
         // 5) Fire at middle
-        _trainingFireLocked = false;
-        SetActionState(_fireActions, ActionVisualState.Active);
-        SetIndicatorVisual(fireButton, ActionVisualState.Active);
         yield return ShowTrainingStep(
             LocalizationTables.Keys.ModalFire,
-            FindActionHighlightTarget(_fireActions, fireButton),
-            TrainingAllow.Fire,
-            requireOk: false);
-        while (_phase != Phase.Finished)
-            yield return null;
-        ClearTrainingHighlight();
-        HideTrainingModal();
+            () => FindActionHighlightTarget(_fireActions, fireButton),
+            TrainingAllow.Fire);
 
         yield return TrainingWait(1.5f);
-        yield return ShowTrainingHitModal();
-        _trainingRoutine = null;
     }
 
-    private IEnumerator ShowTrainingStep(string bodyKey, GameObject highlight, TrainingAllow allow, bool requireOk)
+    private IEnumerator ShowTrainingStep(string bodyKey, Func<GameObject> findHighlight, TrainingAllow allow)
     {
-        if (_trainingSilent && requireOk)
-        {
-            // Silent Aim Ok (and any other Ok except Wait, which is handled in the sequence): 1.5s overlay pause.
-            ShowTrainingOverlayOnly(highlight);
-            _trainingAllowed = TrainingAllow.None;
-            _trainingFrozen = true;
-            yield return TrainingWait(1.5f);
-            _trainingFrozen = false;
-            ClearTrainingHighlight();
-            HideTrainingModal();
-            yield break;
-        }
+        while (TrainingPaused)
+            yield return null;
 
-        if (_trainingSilent && !requireOk)
-        {
-            ShowTrainingOverlayOnly(highlight);
-            _trainingFrozen = true;
-            _trainingAllowed = allow;
-            // Wait for player action on highlighted control
-            Phase before = _phase;
-            if (allow == TrainingAllow.Draw)
-            {
-                while (_phase == Phase.BellShown)
-                    yield return null;
-            }
-            else if (allow == TrainingAllow.Pull)
-            {
-                while (_phase == Phase.Drawn)
-                    yield return null;
-            }
-            else if (allow == TrainingAllow.Fire)
-            {
-                while (_phase != Phase.Finished)
-                    yield return null;
-            }
-            else
-            {
-                yield return TrainingWait(1.5f);
-            }
-
-            _ = before;
-            // Keep frozen between Pull → Aim so the crosshair does not drift before Aim Ok / silent pause.
-            _trainingAllowed = TrainingAllow.None;
-            yield break;
-        }
-
-        // Full modal path
-        ShowTrainingModal(LocalizationTables.Get(bodyKey), highlight, showOk: requireOk, showHitButtons: false);
-        _trainingFrozen = true;
+        bool requireOk = allow == TrainingAllow.Ok;
         _trainingAllowed = allow;
+        _trainingFrozen = true;
+        RefreshTrainingActions();
 
-        if (requireOk)
+        if (_trainingSilent)
+            ShowTrainingOverlayOnly(findHighlight);
+        else
+            ShowTrainingModal(LocalizationTables.Get(bodyKey), findHighlight, showOk: requireOk, showHitButtons: false);
+
+        if (!requireOk)
+        {
+            Phase before = _phase;
+            while (_phase == before || TrainingPaused)
+                yield return null;
+        }
+        else
         {
             bool done = false;
-            void OnOk() { done = true; }
-            if (_trainingOk != null)
+            void OnOk()
             {
-                _trainingOk.onClick.RemoveAllListeners();
-                _trainingOk.onClick.AddListener(OnOk);
+                if (!TrainingPaused)
+                    done = true;
             }
 
-            while (!done)
+            if (_trainingOk != null)
+                _trainingOk.onClick.AddListener(OnOk);
+
+            while (!done || TrainingPaused)
             {
                 if (Keyboard.current != null && Keyboard.current.enterKey.wasPressedThisFrame)
-                    done = true;
+                    OnOk();
                 yield return null;
             }
 
             if (_trainingOk != null)
-                _trainingOk.onClick.RemoveAllListeners();
-            _trainingFrozen = false;
-            _trainingAllowed = TrainingAllow.None;
-            ClearTrainingHighlight();
-            HideTrainingModal();
+                _trainingOk.onClick.RemoveListener(OnOk);
         }
-        // Action steps: stay frozen/modal until phase advances (caller waits)
+
+        _trainingFrozen = allow == TrainingAllow.Pull && !_trainingSilent;
+        _trainingAllowed = TrainingAllow.None;
+        HideTrainingModal();
     }
 
-    private IEnumerator ShowTrainingHitModal()
+    private IEnumerator ShowTrainingHitModal(Action requestRetry)
     {
+        while (TrainingPaused)
+            yield return null;
+
         ShowTrainingModal(
             LocalizationTables.Get(LocalizationTables.Keys.ModalHit),
             null,
@@ -333,55 +293,37 @@ public partial class RoundController
 
         bool retry = false;
         bool ready = false;
-        if (_trainingRetry != null)
+        void OnRetry()
         {
-            _trainingRetry.onClick.RemoveAllListeners();
-            _trainingRetry.onClick.AddListener(() => retry = true);
+            if (!TrainingPaused)
+                retry = true;
         }
+
+        void OnReady()
+        {
+            if (!TrainingPaused)
+                ready = true;
+        }
+
+        if (_trainingRetry != null)
+            _trainingRetry.onClick.AddListener(OnRetry);
 
         if (_trainingReady != null)
-        {
-            _trainingReady.onClick.RemoveAllListeners();
-            _trainingReady.onClick.AddListener(() => ready = true);
-        }
+            _trainingReady.onClick.AddListener(OnReady);
 
-        while (!retry && !ready)
+        while ((!retry && !ready) || TrainingPaused)
             yield return null;
 
         if (_trainingRetry != null)
-            _trainingRetry.onClick.RemoveAllListeners();
+            _trainingRetry.onClick.RemoveListener(OnRetry);
         if (_trainingReady != null)
-            _trainingReady.onClick.RemoveAllListeners();
+            _trainingReady.onClick.RemoveListener(OnReady);
 
-        ClearTrainingHighlight();
         HideTrainingModal();
         _trainingFrozen = false;
 
-        if (ready)
-        {
-            ExitTrainingToMenu();
-            yield break;
-        }
-
-        // Retry silent
-        TrainingSession.RequestStart(silentModals: true);
-        TrainingSession.ConsumePending();
-        _trainingSilent = true;
-        _trainingActive = true;
-        ApplyTrainingLevelPresentation();
-        EnterWaitingToStart();
-    }
-
-    private void ExitTrainingToMenu()
-    {
-        TrainingSession.MarkCompletedAndExit();
-        Time.timeScale = 1f;
-        AudioListener.pause = false;
-        _paused = false;
-        _trainingFrozen = false;
-        GamePauseGate.IsUserPaused = false;
-        YandexGamesSdk.GameplayStop();
-        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        if (retry && !ready)
+            requestRetry();
     }
 
     private void NotifyTrainingLeftToMenu()
@@ -392,33 +334,36 @@ public partial class RoundController
 
     private IEnumerator TrainingWait(float seconds)
     {
-        float t = 0f;
-        while (t < seconds)
+        float elapsed = 0f;
+        while (elapsed < seconds || TrainingPaused)
         {
-            if (!_paused && !YandexGamesSdk.PlatformPaused)
-                t += Time.unscaledDeltaTime;
             yield return null;
+            if (!TrainingPaused)
+                elapsed += Time.unscaledDeltaTime;
         }
     }
 
     private bool TrainingBlocksAction(TrainingAllow needed)
     {
-        if (!_trainingActive)
-            return false;
-        if (_trainingDrawLocked && needed == TrainingAllow.Draw)
-            return true;
-        if (_trainingFireLocked && needed == TrainingAllow.Fire)
-            return true;
-        if (_trainingFrozen && _trainingAllowed != needed && needed != TrainingAllow.None)
-            return true;
-        return false;
+        return IsTraining && _trainingAllowed != needed;
     }
 
-    private bool TrainingInputBlocked()
+    private void RefreshTrainingActions()
     {
-        if (!_trainingActive)
-            return false;
-        return _trainingFrozen && _trainingAllowed == TrainingAllow.None;
+        bool aimed = _phase == Phase.Aimed;
+        var allowed = TrainingPaused ? TrainingAllow.None : _trainingAllowed;
+        SetTrainingAction(_drawActions, drawButton, allowed == TrainingAllow.Draw && _phase == Phase.BellShown, _phase == Phase.Drawn || aimed);
+        SetTrainingAction(_pullActions, pullButton, allowed == TrainingAllow.Pull && _phase == Phase.Drawn, aimed);
+        SetTrainingAction(_fireActions, fireButton, allowed == TrainingAllow.Fire && aimed, pressed: false);
+    }
+
+    private void SetTrainingAction(List<TouchActionButton> actions, Button indicator, bool active, bool pressed)
+    {
+        var state = pressed ? ActionVisualState.Pressed : ActionVisualState.Inactive;
+        if (active)
+            state = ActionVisualState.Active;
+        SetActionState(actions, state);
+        SetIndicatorVisual(indicator, state);
     }
 
     private void OnTrainingReachedMiddle()
@@ -441,120 +386,32 @@ public partial class RoundController
         if (_trainingRoot != null)
             return;
 
-        Transform hud = null;
-        if (bottomPanel != null && bottomPanel.transform.parent != null)
-            hud = bottomPanel.transform.parent;
-        if (hud == null)
-        {
-            var canvas = FindFirstObjectByType<Canvas>();
-            if (canvas != null)
-                hud = canvas.transform.Find("HUD") ?? canvas.transform;
-        }
-
-        if (hud == null)
+        var canvas = FindFirstObjectByType<Canvas>();
+        Transform hud = canvas != null ? canvas.transform.Find("HUD") : null;
+        hud ??= bottomPanel != null ? bottomPanel.transform.parent : canvas?.transform;
+        _trainingRoot = SceneUiFactory.EnsureTrainingRoot(hud);
+        if (_trainingRoot == null)
             return;
 
-        var root = new GameObject("TrainingRoot", typeof(RectTransform));
-        root.transform.SetParent(hud, false);
-        var rootRt = root.GetComponent<RectTransform>();
-        rootRt.anchorMin = Vector2.zero;
-        rootRt.anchorMax = Vector2.one;
-        rootRt.offsetMin = Vector2.zero;
-        rootRt.offsetMax = Vector2.zero;
-        _trainingRoot = root;
+        Transform modal = _trainingRoot.transform.Find("Modal");
+        _trainingModal = modal.gameObject;
+        Transform panel = modal.Find("Panel");
+        _trainingBody = panel.Find("Body").GetComponent<TMP_Text>();
+        _trainingOk = panel.Find("Ok").GetComponent<Button>();
+        _trainingRetry = panel.Find("Retry").GetComponent<Button>();
+        _trainingReady = panel.Find("Ready").GetComponent<Button>();
 
-        var overlayGo = new GameObject("Overlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        overlayGo.transform.SetParent(root.transform, false);
-        var overlayRt = overlayGo.GetComponent<RectTransform>();
-        overlayRt.anchorMin = Vector2.zero;
-        overlayRt.anchorMax = Vector2.one;
-        overlayRt.offsetMin = Vector2.zero;
-        overlayRt.offsetMax = Vector2.zero;
-        _trainingOverlay = overlayGo.GetComponent<Image>();
-        _trainingOverlay.color = new Color(0f, 0f, 0f, 0.5f);
-        _trainingOverlay.raycastTarget = true;
-
-        var hostGo = new GameObject("HighlightHost", typeof(RectTransform));
-        hostGo.transform.SetParent(root.transform, false);
-        _trainingHighlightHost = hostGo.GetComponent<RectTransform>();
-        _trainingHighlightHost.anchorMin = Vector2.zero;
-        _trainingHighlightHost.anchorMax = Vector2.one;
-        _trainingHighlightHost.offsetMin = Vector2.zero;
-        _trainingHighlightHost.offsetMax = Vector2.zero;
-
-        var modalGo = new GameObject("Modal", typeof(RectTransform));
-        modalGo.transform.SetParent(root.transform, false);
-        var modalRt = modalGo.GetComponent<RectTransform>();
-        modalRt.anchorMin = Vector2.zero;
-        modalRt.anchorMax = Vector2.one;
-        modalRt.offsetMin = Vector2.zero;
-        modalRt.offsetMax = Vector2.zero;
-        _trainingModal = modalGo;
-
-        var panel = new GameObject("Panel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        panel.transform.SetParent(modalGo.transform, false);
-        var panelRt = panel.GetComponent<RectTransform>();
-        panelRt.anchorMin = new Vector2(0.5f, 0.5f);
-        panelRt.anchorMax = new Vector2(0.5f, 0.5f);
-        panelRt.sizeDelta = new Vector2(520f, 280f);
-        panelRt.anchoredPosition = new Vector2(0f, 80f);
-        var panelImg = panel.GetComponent<Image>();
-        panelImg.color = Color.white;
-        panelImg.raycastTarget = true;
-
-        var bodyGo = new GameObject("Body", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-        bodyGo.transform.SetParent(panel.transform, false);
-        var bodyRt = bodyGo.GetComponent<RectTransform>();
-        bodyRt.anchorMin = new Vector2(0.5f, 1f);
-        bodyRt.anchorMax = new Vector2(0.5f, 1f);
-        bodyRt.pivot = new Vector2(0.5f, 1f);
-        bodyRt.sizeDelta = new Vector2(460f, 140f);
-        bodyRt.anchoredPosition = new Vector2(0f, -24f);
-        _trainingBody = bodyGo.GetComponent<TextMeshProUGUI>();
-        _trainingBody.fontSize = 26f;
-        _trainingBody.alignment = TextAlignmentOptions.Center;
-        _trainingBody.color = Color.black;
-        _trainingBody.enableAutoSizing = true;
-        _trainingBody.fontSizeMin = 12f;
-        _trainingBody.fontSizeMax = 48f;
-
-        _trainingOk = CreateTrainingButton(panel.transform, "Ok", new Vector2(0f, -90f));
-        _trainingRetry = CreateTrainingButton(panel.transform, "Retry", new Vector2(-120f, -90f));
-        _trainingReady = CreateTrainingButton(panel.transform, "Ready", new Vector2(120f, -90f));
+        var overlayGo = new GameObject("Overlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(TrainingShadeGraphic));
+        overlayGo.transform.SetParent(_trainingRoot.transform, false);
+        overlayGo.transform.SetAsFirstSibling();
+        _trainingOverlay = overlayGo.GetComponent<TrainingShadeGraphic>();
+        _trainingOverlay.rectTransform.anchorMin = Vector2.zero;
+        _trainingOverlay.rectTransform.anchorMax = Vector2.one;
+        _trainingOverlay.rectTransform.offsetMin = Vector2.zero;
+        _trainingOverlay.rectTransform.offsetMax = Vector2.zero;
+        _trainingOverlay.color = new Color32(0, 0, 0, 200);
 
         RaiseMenuAndSoundAboveTraining(hud);
-        _trainingRoot.SetActive(false);
-    }
-
-    private static Button CreateTrainingButton(Transform parent, string name, Vector2 pos)
-    {
-        var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
-        go.transform.SetParent(parent, false);
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0.5f, 0.5f);
-        rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = new Vector2(200f, 64f);
-        rt.anchoredPosition = pos;
-        var img = go.GetComponent<Image>();
-        img.color = Color.white;
-        var btn = go.GetComponent<Button>();
-        btn.targetGraphic = img;
-
-        var labelGo = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-        labelGo.transform.SetParent(go.transform, false);
-        var labelRt = labelGo.GetComponent<RectTransform>();
-        labelRt.anchorMin = Vector2.zero;
-        labelRt.anchorMax = Vector2.one;
-        labelRt.offsetMin = Vector2.zero;
-        labelRt.offsetMax = Vector2.zero;
-        var tmp = labelGo.GetComponent<TextMeshProUGUI>();
-        tmp.text = name;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = Color.black;
-        tmp.enableAutoSizing = true;
-        tmp.fontSizeMin = 12f;
-        tmp.fontSizeMax = 48f;
-        return btn;
     }
 
     private void RaiseMenuAndSoundAboveTraining(Transform hud)
@@ -568,7 +425,7 @@ public partial class RoundController
             top.SetAsLastSibling();
     }
 
-    private void ShowTrainingOverlayOnly(GameObject highlight)
+    private void ShowTrainingOverlayOnly(Func<GameObject> findHighlight)
     {
         EnsureTrainingUi();
         if (_trainingRoot == null)
@@ -576,21 +433,18 @@ public partial class RoundController
         _trainingRoot.SetActive(true);
         if (_trainingModal != null)
             _trainingModal.SetActive(false);
-        if (_trainingOverlay != null)
-            _trainingOverlay.gameObject.SetActive(true);
-        SetTrainingHighlight(highlight);
+        _findTrainingHighlight = findHighlight;
+        RefreshTrainingShade();
         RaiseMenuAndSoundAboveTraining(_trainingRoot.transform.parent);
     }
 
-    private void ShowTrainingModal(string body, GameObject highlight, bool showOk, bool showHitButtons)
+    private void ShowTrainingModal(string body, Func<GameObject> findHighlight, bool showOk, bool showHitButtons)
     {
         EnsureTrainingUi();
         if (_trainingRoot == null)
             return;
 
         _trainingRoot.SetActive(true);
-        if (_trainingOverlay != null)
-            _trainingOverlay.gameObject.SetActive(true);
         if (_trainingModal != null)
             _trainingModal.SetActive(true);
         if (_trainingBody != null)
@@ -614,47 +468,43 @@ public partial class RoundController
             SetButtonLabel(_trainingReady, LocalizationTables.Keys.TrainingReady);
         }
 
-        SetTrainingHighlight(highlight);
+        _findTrainingHighlight = findHighlight;
+        RefreshTrainingShade();
         RaiseMenuAndSoundAboveTraining(_trainingRoot.transform.parent);
     }
 
     private void HideTrainingModal()
     {
-        if (_trainingModal != null)
-            _trainingModal.SetActive(false);
-        if (_trainingRoot != null && _highlightedObject == null)
+        _findTrainingHighlight = null;
+        if (_trainingRoot != null)
             _trainingRoot.SetActive(false);
-        if (_trainingOverlay != null && _highlightedObject == null)
-            _trainingOverlay.gameObject.SetActive(false);
     }
 
-    private void SetTrainingHighlight(GameObject target)
+    private void RefreshTrainingShade()
     {
-        ClearTrainingHighlight();
-        if (target == null || _trainingHighlightHost == null)
+        if (_trainingOverlay == null || !_trainingOverlay.gameObject.activeInHierarchy)
             return;
 
-        _highlightedObject = target;
-        _highlightOriginalParent = target.transform.parent;
-        _highlightOriginalSibling = target.transform.GetSiblingIndex();
-        target.transform.SetParent(_trainingHighlightHost, true);
-        target.transform.SetAsLastSibling();
-    }
-
-    private void ClearTrainingHighlight()
-    {
-        if (_highlightedObject == null)
-            return;
-
-        if (_highlightOriginalParent != null)
+        var target = _findTrainingHighlight?.Invoke()?.transform as RectTransform;
+        if (target == null || !target.gameObject.activeInHierarchy)
         {
-            _highlightedObject.transform.SetParent(_highlightOriginalParent, true);
-            int max = _highlightOriginalParent.childCount - 1;
-            _highlightedObject.transform.SetSiblingIndex(Mathf.Clamp(_highlightOriginalSibling, 0, max));
+            _trainingOverlay.SetHighlight(default);
+            return;
         }
 
-        _highlightedObject = null;
-        _highlightOriginalParent = null;
+        // Measure the live button each frame so the cutout follows changes of orientation.
+        target.GetWorldCorners(_trainingHighlightCorners);
+        var overlay = _trainingOverlay.rectTransform;
+        Vector2 min = overlay.InverseTransformPoint(_trainingHighlightCorners[0]);
+        Vector2 max = min;
+        foreach (Vector3 corner in _trainingHighlightCorners)
+        {
+            Vector2 point = overlay.InverseTransformPoint(corner);
+            min = Vector2.Min(min, point);
+            max = Vector2.Max(max, point);
+        }
+
+        _trainingOverlay.SetHighlight(Rect.MinMaxRect(min.x, min.y, max.x, max.y));
     }
 
     private GameObject FindBellHighlightTarget()
@@ -663,7 +513,7 @@ public partial class RoundController
         {
             for (int i = 0; i < _bellImages.Count; i++)
             {
-                if (_bellImages[i] != null)
+                if (_bellImages[i] != null && _bellImages[i].gameObject.activeInHierarchy)
                     return _bellImages[i].gameObject;
             }
         }
@@ -672,14 +522,15 @@ public partial class RoundController
         return bell;
     }
 
-    private static GameObject FindActionHighlightTarget(System.Collections.Generic.List<TouchActionButton> actions, Button indicator)
+    private static GameObject FindActionHighlightTarget(List<TouchActionButton> actions, Button indicator)
     {
         if (actions != null)
         {
             for (int i = 0; i < actions.Count; i++)
             {
-                if (actions[i] != null && actions[i].button != null)
-                    return actions[i].button.gameObject;
+                var button = actions[i]?.button;
+                if (button != null && button.gameObject.activeInHierarchy)
+                    return button.gameObject;
             }
         }
 

@@ -18,9 +18,37 @@ public static class SceneUiFactory
     private const float DefaultBtnH = 75f;
     private const float CityRowHeight = 120f;
     private const float CityIconBtnSize = 72f;
-    private const string DefaultButtonAssetPath = "Assets/Art/defaultButton.png";
+    public static GameObject EnsureTrainingRoot(Transform hud)
+    {
+        if (hud == null)
+            return null;
 
-    private static Sprite _defaultButtonSprite;
+        Transform existing = hud.Find("TrainingRoot");
+        if (existing != null)
+            return existing.gameObject;
+
+        var root = CreateStretchRoot(hud, "TrainingRoot");
+        var modal = CreateStretchRoot(root.transform, "Modal");
+        var style = CaptureStyle(hud);
+        var panel = BeginPanel("Panel", modal.transform, style);
+        TMP_Text body = AddLabel(panel, "Body", string.Empty, 26f, 140f);
+        ApplyTextAutoSize(body);
+
+        const float buttonWidth = 220f;
+        const float buttonHeight = 70f;
+        const float buttonGap = 20f;
+        Vector2 size = new Vector2(buttonWidth, buttonHeight);
+        AddSlot(panel, buttonWidth * 2f + buttonGap, buttonHeight, out Vector2 position);
+        Vector2 halfSpacing = Vector2.right * ((buttonWidth + buttonGap) * 0.5f);
+        CreateMenuButton(panel.Root.transform, "Ok", position, style, size);
+        CreateMenuButton(panel.Root.transform, "Retry", position - halfSpacing, style, size).gameObject.SetActive(false);
+        CreateMenuButton(panel.Root.transform, "Ready", position + halfSpacing, style, size).gameObject.SetActive(false);
+
+        FinishPanel(panel);
+        panel.Root.GetComponent<RectTransform>().anchoredPosition = Vector2.up * 80f;
+        root.SetActive(false);
+        return root;
+    }
 
     public static GameObject EnsurePauseMenu(Transform hud)
     {
@@ -293,7 +321,7 @@ public static class SceneUiFactory
     }
 
     /// <summary>
-    /// Editor-only bake: apply defaultButton / fonts / fit to generated panels and save into the scene.
+    /// Editor-only bake: apply default UI art and fonts and fit generated panels.
     /// Do not call from runtime — layout must be visible and editable in Scene view.
     /// </summary>
     public static void RestyleGeneratedPanels(Transform root)
@@ -314,6 +342,10 @@ public static class SceneUiFactory
             if (panel == null)
                 continue;
             RestyleTree(panel, style);
+            // LevelComplete reserves separate slots for controls hidden until nickname entry.
+            if (panel.name == "LevelComplete")
+                continue;
+
             Transform inner = panel.Find("Panel") ?? panel;
             ReflowVerticalChildren(inner as RectTransform);
             FitPanelToChildren(inner as RectTransform, PadX, PadTop, PadBottom);
@@ -518,34 +550,27 @@ public static class SceneUiFactory
         public TMP_FontAsset Font;
     }
 
-    private static Sprite GetDefaultButtonSprite()
+    public static bool ApplyTextAutoSize(TMP_Text text, float minSize = 12f, float maxSize = 48f)
     {
-        if (_defaultButtonSprite != null)
-            return _defaultButtonSprite;
+        if (text.enableAutoSizing && text.fontSizeMin == minSize && text.fontSizeMax == maxSize)
+            return false;
 
-#if UNITY_EDITOR
-        _defaultButtonSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(DefaultButtonAssetPath);
-#endif
-        if (_defaultButtonSprite == null)
-        {
-            Sprite[] all = Resources.FindObjectsOfTypeAll<Sprite>();
-            for (int i = 0; i < all.Length; i++)
-            {
-                if (all[i] != null && all[i].name == "defaultButton")
-                {
-                    _defaultButtonSprite = all[i];
-                    break;
-                }
-            }
-        }
-
-        return _defaultButtonSprite;
+        text.enableAutoSizing = true;
+        text.fontSizeMin = minSize;
+        text.fontSizeMax = maxSize;
+        return true;
     }
 
     private static Style CaptureStyle(Transform root)
     {
         var style = new Style();
-        style.ButtonSprite = GetDefaultButtonSprite();
+        var skin = MenuUiSkin.Load();
+        if (skin != null)
+        {
+            style.ButtonSprite = skin.Button;
+            style.PanelSprite = skin.Panel;
+        }
+
         if (root == null)
             return style;
 
@@ -558,16 +583,10 @@ public static class SceneUiFactory
 
         if (finish != null)
         {
-            var image = finish.GetComponent<Image>();
-            if (image != null)
-                style.PanelSprite = image.sprite;
             var label = finish.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
                 style.Font = label.font;
         }
-
-        if (style.PanelSprite == null)
-            style.PanelSprite = style.ButtonSprite;
 
         if (style.Font == null)
         {
@@ -665,7 +684,7 @@ public static class SceneUiFactory
         var rt = go.GetComponent<RectTransform>();
         Center(rt, pos, buttonSize);
 
-        Sprite buttonSprite = style.ButtonSprite != null ? style.ButtonSprite : GetDefaultButtonSprite();
+        Sprite buttonSprite = style.ButtonSprite;
         var image = go.GetComponent<Image>();
         image.sprite = buttonSprite;
         image.type = buttonSprite != null ? Image.Type.Sliced : Image.Type.Simple;
@@ -683,9 +702,7 @@ public static class SceneUiFactory
             text.text = name;
             text.alignment = TextAlignmentOptions.Center;
             text.fontSize = 26;
-            text.enableAutoSizing = true;
-            text.fontSizeMin = 16;
-            text.fontSizeMax = 28;
+            ApplyTextAutoSize(text);
             text.color = Color.black;
             text.raycastTarget = false;
             if (style.Font != null)
@@ -700,9 +717,10 @@ public static class SceneUiFactory
 
     private static void RestyleTree(Transform t, Style style)
     {
-        bool isButton = t.GetComponent<Button>() != null;
+        var button = t.GetComponent<Button>();
+        bool isButton = button != null;
         bool inCityRow = IsUnderCityRow(t);
-        Sprite buttonSprite = style.ButtonSprite != null ? style.ButtonSprite : GetDefaultButtonSprite();
+        Sprite buttonSprite = style.ButtonSprite;
 
         var image = t.GetComponent<Image>();
         if (image != null)
@@ -710,7 +728,7 @@ public static class SceneUiFactory
             bool overlay = t.name == "Overlay";
             if (!overlay)
             {
-                if (isButton && buttonSprite != null)
+                if (isButton && buttonSprite != null && MenuUiSkin.NeedsDefaultArt(image.sprite))
                 {
                     image.sprite = buttonSprite;
                     image.type = Image.Type.Sliced;

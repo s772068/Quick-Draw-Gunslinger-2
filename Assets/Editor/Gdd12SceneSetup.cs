@@ -11,10 +11,45 @@ using UnityEngine.UI;
 /// </summary>
 public static class Gdd12SceneSetup
 {
-    private const string ButtonDefaultPath = "Assets/Art/UI/Menus/Button_Default.png";
-    private const string ButtonDefaultPressedPath = "Assets/Art/UI/Menus/Button_Default_pressed.png";
-    private const string PanelBackgroundPath = "Assets/Art/UI/Menus/panel_background.png";
     private const string TrainingArtFolder = "Assets/Art/Levels/00_Training";
+    private static readonly string[] ScenePaths =
+    {
+        "Assets/Scenes/GameScene.unity",
+        "Assets/Scenes/MainMenu.unity"
+    };
+
+    [MenuItem("QDG2/Rebuild 1.2 UI")]
+    public static void RebuildUi()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode || !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            return;
+
+        Scene activeScene = SceneManager.GetActiveScene();
+        foreach (string path in ScenePaths)
+        {
+            Scene scene = SceneManager.GetSceneByPath(path);
+            bool openedHere = !scene.isLoaded;
+            if (openedHere)
+                scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+
+            try
+            {
+                SceneManager.SetActiveScene(scene);
+                if (ApplyUiDefaults(scene))
+                {
+                    EditorSceneManager.MarkSceneDirty(scene);
+                    EditorSceneManager.SaveScene(scene);
+                }
+            }
+            finally
+            {
+                if (activeScene.isLoaded)
+                    SceneManager.SetActiveScene(activeScene);
+                if (openedHere)
+                    EditorSceneManager.CloseScene(scene, removeScene: true);
+            }
+        }
+    }
 
     [MenuItem("QDG2/Apply GDD 1.2")]
     public static void ApplyProjectScenes()
@@ -24,13 +59,7 @@ public static class Gdd12SceneSetup
 
         Gdd05LocalizationSetup.Setup();
 
-        string[] paths =
-        {
-            "Assets/Scenes/GameScene.unity",
-            "Assets/Scenes/MainMenu.unity"
-        };
-
-        foreach (string path in paths)
+        foreach (string path in ScenePaths)
         {
             var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
             bool changed = false;
@@ -305,16 +334,17 @@ public static class Gdd12SceneSetup
 
     private static bool ApplyUiDefaults(Scene scene)
     {
-        Sprite buttonDefault = AssetDatabase.LoadAssetAtPath<Sprite>(ButtonDefaultPath);
-        Sprite buttonPressed = AssetDatabase.LoadAssetAtPath<Sprite>(ButtonDefaultPressedPath);
-        Sprite panelBg = AssetDatabase.LoadAssetAtPath<Sprite>(PanelBackgroundPath);
-        if (buttonDefault == null)
-            Debug.LogWarning("[Gdd12SceneSetup] Missing " + ButtonDefaultPath);
-        if (panelBg == null)
-            Debug.LogWarning("[Gdd12SceneSetup] Missing " + PanelBackgroundPath);
+        var skin = MenuUiSkin.Load();
+        if (skin == null || skin.Button == null || skin.Panel == null)
+            throw new System.InvalidOperationException("MenuUiSkin must reference the default button and panel sprites.");
 
-        var pressedByBase = BuildPressedMap();
         bool changed = false;
+        if (scene.name == "GameScene")
+        {
+            Transform hud = FindDeepRoot(scene, "HUD");
+            if (hud != null && hud.Find("TrainingRoot") == null)
+                changed = SceneUiFactory.EnsureTrainingRoot(hud) != null;
+        }
 
         Button[] buttons = Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         for (int i = 0; i < buttons.Length; i++)
@@ -323,56 +353,57 @@ public static class Gdd12SceneSetup
             if (button == null || !button.gameObject.scene.IsValid() || button.gameObject.scene != scene)
                 continue;
 
-            var image = button.targetGraphic as Image;
-            if (image == null)
-                image = button.GetComponent<Image>();
-            if (image == null)
-                continue;
-
-            bool needsDefault = image.sprite == null
-                                || image.sprite.name == "UISprite"
-                                || image.sprite.name == "Background"
-                                || image.sprite.name == "Knob";
-            if (needsDefault && buttonDefault != null)
+            var image = button.targetGraphic as Image ?? button.GetComponent<Image>();
+            if (image != null)
             {
-                image.sprite = buttonDefault;
-                image.type = Image.Type.Sliced;
-                image.color = Color.white;
-                changed = true;
-            }
-
-            Sprite pressed = null;
-            if (image.sprite != null && pressedByBase.TryGetValue(image.sprite.name, out Sprite mapped))
-                pressed = mapped;
-            else if (needsDefault)
-                pressed = buttonPressed;
-
-            if (pressed != null)
-            {
-                button.transition = Selectable.Transition.SpriteSwap;
-                SpriteState state = button.spriteState;
-                state.pressedSprite = pressed;
-                button.spriteState = state;
-                changed = true;
-            }
-
-            TMP_Text[] labels = button.GetComponentsInChildren<TMP_Text>(true);
-            for (int j = 0; j < labels.Length; j++)
-            {
-                TMP_Text label = labels[j];
-                if (label == null)
-                    continue;
-                if (!label.enableAutoSizing || label.fontSizeMin != 12f || label.fontSizeMax != 48f)
+                if (MenuUiSkin.NeedsDefaultArt(image.sprite))
                 {
-                    label.enableAutoSizing = true;
-                    label.fontSizeMin = 12f;
-                    label.fontSizeMax = 48f;
+                    image.sprite = skin.Button;
+                    image.type = Image.Type.Sliced;
+                    image.color = Color.white;
                     changed = true;
                 }
+
+                if (button.targetGraphic == null)
+                {
+                    button.targetGraphic = image;
+                    changed = true;
+                }
+
             }
 
-            EditorUtility.SetDirty(button);
-            EditorUtility.SetDirty(image);
+            bool isDuelAction = scene.name == "GameScene" &&
+                (button.transform.parent?.name switch
+                {
+                    "VerticalControls" or "HorizontalControls" => button.name is "DrawBtn" or "PullBtn" or "FireBtn",
+                    "TouchControls" => button.name is "DrawTouchBtn" or "PullTouchBtn" or "FireTouchBtn",
+                    _ => false
+                });
+            var transition = isDuelAction ? Selectable.Transition.SpriteSwap : Selectable.Transition.ColorTint;
+            if (button.transition != transition)
+            {
+                button.transition = transition;
+                changed = true;
+            }
+
+            foreach (TMP_Text label in button.GetComponentsInChildren<TMP_Text>(true))
+            {
+                bool isKeyboardHint = label.name == "Hint" && (label.text is "D" or "P" or "F");
+                changed |= isKeyboardHint
+                    ? SceneUiFactory.ApplyTextAutoSize(label, 72f, 160f)
+                    : SceneUiFactory.ApplyTextAutoSize(label);
+            }
+
+            foreach (Text label in button.GetComponentsInChildren<Text>(true))
+            {
+                if (label.resizeTextForBestFit && label.resizeTextMinSize == 12 && label.resizeTextMaxSize == 48)
+                    continue;
+
+                label.resizeTextForBestFit = true;
+                label.resizeTextMinSize = 12;
+                label.resizeTextMaxSize = 48;
+                changed = true;
+            }
         }
 
         Image[] images = Object.FindObjectsByType<Image>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -381,74 +412,23 @@ public static class Gdd12SceneSetup
             Image image = images[i];
             if (image == null || !image.gameObject.scene.IsValid() || image.gameObject.scene != scene)
                 continue;
-            if (image.GetComponent<Button>() != null)
-                continue;
-            if (image.name == "Overlay" || image.name == "Background" || image.name == "HitSprite")
-                continue;
-            if (image.transform.parent != null && image.transform.parent.name.Contains("Crossfire"))
+            if (!MenuUiSkin.NeedsDefaultArt(image.sprite) || image.GetComponentInParent<Button>(true) != null)
                 continue;
 
-            bool looksLikePanel = image.name == "Panel"
-                                  || image.name.EndsWith("Panel")
-                                  || image.name.Contains("Menu")
-                                  || image.name.Contains("Overlay") == false && image.GetComponentInParent<Button>() == null
-                                     && (image.name == "RoundWin" || image.name == "RoundLose" || image.name == "LevelComplete"
-                                         || image.name == "RoundStart" || image.name == "RoundStartPanel"
-                                         || image.name == "AreYouSureAbort" || image.name == "AuthPrompt"
-                                         || image.name == "WorldMap" || image.name == "CityLeaderboard"
-                                         || image.name == "LeaderboardsOverlay");
-
-            // Only assign panel art when sprite is missing / built-in.
-            bool needsPanel = image.sprite == null
-                              || image.sprite.name == "UISprite"
-                              || image.sprite.name == "Background";
-            if (!needsPanel || panelBg == null)
+            string name = image.name;
+            bool isPanel = name.EndsWith("Panel") || name.EndsWith("Menu")
+                           || name is "RoundStart" or "RoundWin" or "RoundLose" or "LevelComplete"
+                               or "AreYouSureAbort" or "AuthPrompt" or "WorldMap" or "CityLeaderboard" or "LeaderboardsOverlay";
+            if (!isPanel)
                 continue;
 
-            // Heuristic: center panels / named panels, not tiny icons.
-            RectTransform rt = image.rectTransform;
-            bool largeEnough = rt != null && (rt.rect.width >= 120f || rt.rect.height >= 80f
-                                              || (rt.anchorMin == Vector2.zero && rt.anchorMax == Vector2.one));
-            if (!looksLikePanel && !largeEnough)
-                continue;
-            if (image.name == "Overlay")
-                continue;
-
-            image.sprite = panelBg;
+            image.sprite = skin.Panel;
             image.type = Image.Type.Sliced;
             image.color = Color.white;
-            EditorUtility.SetDirty(image);
             changed = true;
         }
 
         return changed;
-    }
-
-    private static Dictionary<string, Sprite> BuildPressedMap()
-    {
-        var map = new Dictionary<string, Sprite>();
-        string[] guids = AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Art" });
-        var sprites = new Dictionary<string, Sprite>();
-        for (int i = 0; i < guids.Length; i++)
-        {
-            string path = AssetDatabase.GUIDToAssetPath(guids[i]);
-            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-            if (sprite == null)
-                continue;
-            sprites[sprite.name] = sprite;
-        }
-
-        foreach (var kv in sprites)
-        {
-            string name = kv.Key;
-            if (name.EndsWith("_pressed"))
-                continue;
-            string pressedName = name + "_pressed";
-            if (sprites.TryGetValue(pressedName, out Sprite pressed))
-                map[name] = pressed;
-        }
-
-        return map;
     }
 
     private static Sprite LoadSprite(string folder, string assetName)

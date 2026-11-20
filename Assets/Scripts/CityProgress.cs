@@ -5,10 +5,29 @@ using UnityEngine;
 /// </summary>
 public static class CityProgress
 {
-    private const string UnlockKey = "QDG2_UnlockCity";
-    private const string BestPrefix = "QDG2_Best_";
-    private const string StarsPrefix = "QDG2_Stars_";
-    private const string FastestKey = "QDG2_FastestMs";
+#if UNITY_EDITOR
+    private const string ProgressPrefix = "QDG2_EditorPlay_";
+#else
+    private const string ProgressPrefix = "QDG2_";
+#endif
+    private const string UnlockKey = ProgressPrefix + "UnlockCity";
+    private const string BestPrefix = ProgressPrefix + "Best_";
+    private const string StarsPrefix = ProgressPrefix + "Stars_";
+    private const string FastestKey = ProgressPrefix + "FastestMs";
+
+#if UNITY_EDITOR
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetEditorProgress()
+    {
+        PlayerPrefs.DeleteKey(UnlockKey);
+        PlayerPrefs.DeleteKey(FastestKey);
+        for (int city = 0; city < 3; city++)
+        {
+            PlayerPrefs.DeleteKey(BestPrefix + city);
+            PlayerPrefs.DeleteKey(StarsPrefix + city);
+        }
+    }
+#endif
 
     public static int HighestUnlockedCity
     {
@@ -54,7 +73,9 @@ public static class CityProgress
         if (cityIndex >= HighestUnlockedCity && cityIndex < 2)
             HighestUnlockedCity = cityIndex + 1;
 
-        PlayerPrefs.Save();
+#if !UNITY_EDITOR
+        HttpLeaderboards.QueueCityClear(cityIndex);
+#endif
     }
 }
 

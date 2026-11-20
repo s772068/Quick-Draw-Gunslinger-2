@@ -25,10 +25,6 @@ public partial class RoundController : MonoBehaviour
     {
         public Button button;
         public Image image;
-        [Tooltip("Optional fallbacks if Button Sprite State slots are empty.")]
-        public Sprite inactiveSprite;
-        public Sprite activeSprite;
-        public Sprite pressedSprite;
     }
 
     [Header("World")]
@@ -178,6 +174,7 @@ public partial class RoundController : MonoBehaviour
     private bool _hitboxDebugVisible;
     private bool _timingDebugEnabled;
     private AimDebugOverlay _aimDebug;
+    private TMP_Text _difficultDebug;
     private readonly List<Vector2> _debugShotPoints = new List<Vector2>();
 #endif
     private readonly List<TouchActionButton> _drawActions = new List<TouchActionButton>();
@@ -304,7 +301,7 @@ public partial class RoundController : MonoBehaviour
     private void Update()
     {
 #if UNITY_EDITOR
-        if (EditorRestartPressed())
+        if (!IsTraining && EditorRestartPressed())
         {
             EditorRestartRound();
             return;
@@ -399,6 +396,7 @@ public partial class RoundController : MonoBehaviour
             readyLabel.text = LocalizationTables.Get(LocalizationTables.Keys.Ready);
 
         RefreshOutcomeTexts();
+        RefreshRoundStartLabels();
         RefreshCounters();
     }
 
@@ -471,7 +469,7 @@ public partial class RoundController : MonoBehaviour
 
         if (roundStartPanel == null)
         {
-            var t = hud.Find("RoundStart");
+            var t = hud.Find("ModalLevelStartPanel") ?? hud.Find("RoundStart");
             if (t == null)
                 t = hud.Find("RoundStartPanel");
             if (t != null)
@@ -494,7 +492,7 @@ public partial class RoundController : MonoBehaviour
 
         if (roundWinPanel == null)
         {
-            var t = hud.Find("RoundWin");
+            var t = hud.Find("ModalRoundWin") ?? hud.Find("RoundWin");
             if (t != null)
                 roundWinPanel = t.gameObject;
         }
@@ -508,7 +506,7 @@ public partial class RoundController : MonoBehaviour
 
         if (levelCompletePanel == null)
         {
-            var t = hud.Find("LevelComplete");
+            var t = hud.Find("ModalLevelComplete") ?? hud.Find("LevelComplete");
             if (t != null)
                 levelCompletePanel = t.gameObject;
         }
@@ -614,8 +612,7 @@ public partial class RoundController : MonoBehaviour
             var btn = bell.GetComponent<Button>();
             if (btn != null)
             {
-                // SpriteSwap + non-interactable forces DisabledSprite and overrides Image.sprite.
-                btn.transition = Selectable.Transition.None;
+                btn.enabled = false;
                 btn.interactable = false;
                 btn.onClick.RemoveAllListeners();
             }
@@ -642,10 +639,7 @@ public partial class RoundController : MonoBehaviour
         var action = new TouchActionButton
         {
             button = button,
-            image = image,
-            inactiveSprite = button.spriteState.disabledSprite,
-            activeSprite = button.spriteState.highlightedSprite,
-            pressedSprite = button.spriteState.pressedSprite
+            image = image
         };
         AddActionUnique(list, action);
     }
@@ -731,7 +725,7 @@ public partial class RoundController : MonoBehaviour
 
         if (pauseContinueButton == null && pauseMenuRoot != null)
         {
-            var t = pauseMenuRoot.transform.Find("Panel/PauseContinue");
+            var t = pauseMenuRoot.transform.Find("ControlBtns/ContinueBtn") ?? pauseMenuRoot.transform.Find("Panel/PauseContinue");
             if (t == null)
                 t = pauseMenuRoot.transform.Find("Panel/Continue");
             if (t != null)
@@ -740,7 +734,7 @@ public partial class RoundController : MonoBehaviour
 
         if (pauseExitButton == null && pauseMenuRoot != null)
         {
-            var t = pauseMenuRoot.transform.Find("Panel/PauseExit");
+            var t = pauseMenuRoot.transform.Find("ControlBtns/ExitBtn") ?? pauseMenuRoot.transform.Find("Panel/PauseExit");
             if (t == null)
                 t = pauseMenuRoot.transform.Find("Panel/Exit");
             if (t != null)
@@ -865,6 +859,7 @@ public partial class RoundController : MonoBehaviour
 
     private void LateUpdate()
     {
+        RefreshTrainingShade();
         if (aimDimOverlay != null && aimDimOverlay.gameObject.activeInHierarchy)
             UpdateAimDimHole();
     }
@@ -1048,7 +1043,7 @@ public partial class RoundController : MonoBehaviour
         StopEnemyRoutine();
         StopGunFxRoutine();
 
-        SetPanelActive(roundStartPanel, true);
+        SetPanelActive(roundStartPanel, _cityRun.RoundNumber == 1 && !IsTraining);
         SetPanelActive(roundFinishPanel, false);
         HideSeriesOverlays();
         SetPanelActive(bottomPanel, true);
@@ -1092,7 +1087,7 @@ public partial class RoundController : MonoBehaviour
 
     private void OnStartClicked()
     {
-        if (_paused || YandexGamesSdk.PlatformPaused || _phase != Phase.WaitingToStart)
+        if (IsTraining || _paused || YandexGamesSdk.PlatformPaused || _phase != Phase.WaitingToStart)
             return;
 
         // User gesture unlocks WebGL AudioContext; warm clips before the first bell.
@@ -1142,17 +1137,11 @@ public partial class RoundController : MonoBehaviour
 
     private void OnDrawClicked()
     {
-        if (YandexGamesSdk.PlatformPaused)
-            return;
-        if (_paused && !(_trainingActive && _trainingAllowed == TrainingAllow.Draw))
-            return;
-        if (TrainingBlocksAction(TrainingAllow.Draw))
+        if (_paused || YandexGamesSdk.PlatformPaused || TrainingBlocksAction(TrainingAllow.Draw))
             return;
 
         if (_phase == Phase.WaitingForBell && !_bellFired)
         {
-            if (_trainingActive)
-                return;
             FinishRound(RoundOutcome.FalseStart);
             return;
         }
@@ -1161,9 +1150,12 @@ public partial class RoundController : MonoBehaviour
             return;
 
         SetActionState(_drawActions, ActionVisualState.Pressed);
-        SetActionState(_pullActions, ActionVisualState.Active);
         SetIndicatorVisual(drawButton, ActionVisualState.Pressed);
-        SetIndicatorVisual(pullButton, ActionVisualState.Active);
+        if (!IsTraining)
+        {
+            SetActionState(_pullActions, ActionVisualState.Active);
+            SetIndicatorVisual(pullButton, ActionVisualState.Active);
+        }
         SetVisible(playerGun, true);
         PlaySfx(sfxDraw);
         _phase = Phase.Drawn;
@@ -1172,24 +1164,25 @@ public partial class RoundController : MonoBehaviour
 
     private void OnPullClicked()
     {
-        if (YandexGamesSdk.PlatformPaused)
-            return;
-        if (_paused && !(_trainingActive && _trainingAllowed == TrainingAllow.Pull))
-            return;
-        if (TrainingBlocksAction(TrainingAllow.Pull))
+        if (_paused || YandexGamesSdk.PlatformPaused || TrainingBlocksAction(TrainingAllow.Pull))
             return;
 
         if (_phase == Phase.Drawn)
         {
             SetActionState(_pullActions, ActionVisualState.Pressed);
-            SetActionState(_fireActions, ActionVisualState.Active);
             SetIndicatorVisual(pullButton, ActionVisualState.Pressed);
-            SetIndicatorVisual(fireButton, ActionVisualState.Active);
+            if (!IsTraining)
+            {
+                SetActionState(_fireActions, ActionVisualState.Active);
+                SetIndicatorVisual(fireButton, ActionVisualState.Active);
+            }
             SetVisible(crossfire != null ? crossfire.gameObject : null, true);
             SetAimDim(true);
             if (_gunAim != null)
                 _gunAim.SetAiming(true);
             PlaySfx(sfxGunPull);
+            if (IsTraining && _trainingSilent)
+                _trainingFrozen = false;
             PlayGunShake();
             _phase = Phase.Aimed;
             StartGdd10AimLoop();
@@ -1210,11 +1203,7 @@ public partial class RoundController : MonoBehaviour
 
     private void OnFireClicked()
     {
-        if (YandexGamesSdk.PlatformPaused)
-            return;
-        if (_paused && !(_trainingActive && _trainingAllowed == TrainingAllow.Fire))
-            return;
-        if (TrainingBlocksAction(TrainingAllow.Fire))
+        if (_paused || YandexGamesSdk.PlatformPaused || TrainingBlocksAction(TrainingAllow.Fire))
             return;
 
         if (_phase != Phase.Aimed && _phase != Phase.AimedAfterMiss)
@@ -1274,9 +1263,7 @@ public partial class RoundController : MonoBehaviour
         SetPanelActive(pauseMenuRoot, false);
         if (areYouSureAbortPanel != null)
         {
-            SetPanelActive(areYouSureAbortPanel, true);
-            areYouSureAbortPanel.transform.SetAsLastSibling();
-            RefreshMenuButtonInteractable();
+            ShowAbortConfirmation();
             return;
         }
 
@@ -1285,6 +1272,7 @@ public partial class RoundController : MonoBehaviour
 
     private void OnPauseExitClicked()
     {
+        WorldMapPreview.OpenMapOnLoad = !IsTraining;
         NotifyTrainingLeftToMenu();
         Time.timeScale = 1f;
         AudioListener.pause = false;
@@ -1319,15 +1307,15 @@ public partial class RoundController : MonoBehaviour
     private void ClosePauseMenu()
     {
         SetPanelActive(pauseMenuRoot, false);
-        SetGameplayHudInteractable(true);
         _paused = false;
         GamePauseGate.IsUserPaused = false;
+        SetGameplayHudInteractable(!YandexGamesSdk.PlatformPaused);
 
         if (!YandexGamesSdk.PlatformPaused)
         {
             Time.timeScale = 1f;
             AudioListener.pause = false;
-            if (_phase != Phase.WaitingToStart && _phase != Phase.Finished)
+            if (_phase != Phase.Finished && (IsTraining || IsDuelInProgress()))
                 YandexGamesSdk.GameplayStart();
         }
 
@@ -1338,6 +1326,16 @@ public partial class RoundController : MonoBehaviour
 
     private void SetGameplayHudInteractable(bool interactable)
     {
+        if (IsTraining)
+        {
+            if (_trainingOk != null)
+                _trainingOk.interactable = interactable;
+            if (_trainingRetry != null)
+                _trainingRetry.interactable = interactable;
+            if (_trainingReady != null)
+                _trainingReady.interactable = interactable;
+        }
+
         if (!interactable)
         {
             for (int i = 0; i < _drawActions.Count; i++)
@@ -1360,7 +1358,7 @@ public partial class RoundController : MonoBehaviour
             SetChildButtonInteractable(roundFinishPanel, "RestartSeriesBtn", false);
             SetChildButtonInteractable(roundFinishPanel, "ExitBtn", false);
             SetChildButtonInteractable(_seriesSummary, "RestartSeriesBtn", false);
-            SetChildButtonInteractable(_seriesSummary, "ExitBtn", false);
+            SetChildButtonInteractable(_seriesSummary, "ControlBtns/ExitBtn", false);
         }
         else if (startButton != null && _phase == Phase.WaitingToStart)
         {
@@ -1375,7 +1373,7 @@ public partial class RoundController : MonoBehaviour
             SetChildButtonInteractable(roundFinishPanel, "RestartSeriesBtn", true);
             SetChildButtonInteractable(roundFinishPanel, "ExitBtn", true);
             SetChildButtonInteractable(_seriesSummary, "RestartSeriesBtn", true);
-            SetChildButtonInteractable(_seriesSummary, "ExitBtn", true);
+            SetChildButtonInteractable(_seriesSummary, "ControlBtns/ExitBtn", true);
         }
     }
 
@@ -1393,6 +1391,12 @@ public partial class RoundController : MonoBehaviour
 
     private void ReassertActionInteractable()
     {
+        if (IsTraining)
+        {
+            RefreshTrainingActions();
+            return;
+        }
+
         switch (_phase)
         {
             case Phase.WaitingToStart:
@@ -1435,9 +1439,9 @@ public partial class RoundController : MonoBehaviour
                 SetChildButtonInteractable(roundFinishPanel, "RestartSeriesBtn", true);
                 SetChildButtonInteractable(roundFinishPanel, "ExitBtn", true);
                 SetChildButtonInteractable(_seriesSummary, "RestartSeriesBtn", true);
-                SetChildButtonInteractable(_seriesSummary, "ExitBtn", true);
-                SetChildButtonInteractable(_areYouSure, "Yes", true);
-                SetChildButtonInteractable(_areYouSure, "No", true);
+                SetChildButtonInteractable(_seriesSummary, "ControlBtns/ExitBtn", true);
+                SetChildButtonInteractable(_areYouSure, "ControlBtns/ExitBtn", true);
+                SetChildButtonInteractable(_areYouSure, "ControlBtns/ContinueBtn", true);
                 SetChildButtonInteractable(_authPrompt, "LoginBtn", true);
                 SetChildButtonInteractable(_authPrompt, "SkipBtn", true);
                 break;
@@ -1834,6 +1838,12 @@ public partial class RoundController : MonoBehaviour
         float dur = Mathf.Max(0.01f, gunShakeDuration);
         while (elapsed < dur)
         {
+            if (IsTraining && (_trainingFrozen || TrainingPaused))
+            {
+                yield return null;
+                continue;
+            }
+
             elapsed += Time.deltaTime;
             float t = 1f - Mathf.Clamp01(elapsed / dur);
             Vector2 offset = Random.insideUnitCircle * gunShakeAmount * t;
@@ -1979,9 +1989,6 @@ public partial class RoundController : MonoBehaviour
             ApplyBellImage(bellButton.targetGraphic as Image, sprite);
     }
 
-    /// <summary>
-    /// SpriteSwap keeps showing DisabledSprite via Image.overrideSprite even after sprite is changed.
-    /// </summary>
     private static void ApplyBellImage(Image image, Sprite sprite)
     {
         if (image == null || sprite == null)
@@ -1990,7 +1997,6 @@ public partial class RoundController : MonoBehaviour
         var btn = image.GetComponent<Button>();
         if (btn != null)
         {
-            btn.transition = Selectable.Transition.None;
             btn.interactable = false;
             btn.enabled = false;
         }
@@ -2042,39 +2048,25 @@ public partial class RoundController : MonoBehaviour
             return;
 
         Button button = touch.button;
-        Image image = touch.image != null ? touch.image : button.targetGraphic as Image;
-        SpriteState spriteState = button.spriteState;
-
-        Sprite disabled = spriteState.disabledSprite != null ? spriteState.disabledSprite : touch.inactiveSprite;
-        Sprite highlighted = spriteState.highlightedSprite != null ? spriteState.highlightedSprite : touch.activeSprite;
-        Sprite pressed = spriteState.pressedSprite != null ? spriteState.pressedSprite : touch.pressedSprite;
-
-        switch (state)
+        var sprites = button.spriteState;
+        Sprite sprite = state switch
         {
-            case ActionVisualState.Active:
-                button.transition = Selectable.Transition.SpriteSwap;
-                button.interactable = true;
-                if (image != null && highlighted != null)
-                    image.sprite = highlighted;
-                break;
+            ActionVisualState.Active => sprites.highlightedSprite,
+            ActionVisualState.Pressed => sprites.pressedSprite,
+            _ => sprites.disabledSprite
+        };
 
-            case ActionVisualState.Pressed:
-                button.interactable = false;
-                button.transition = Selectable.Transition.None;
-                if (image != null && pressed != null)
-                    image.sprite = pressed;
-                break;
+        // A completed action stays pressed even though its button is no longer interactive.
+        button.transition = state == ActionVisualState.Pressed
+            ? Selectable.Transition.None
+            : Selectable.Transition.SpriteSwap;
+        button.interactable = state == ActionVisualState.Active;
 
-            default:
-                button.transition = Selectable.Transition.SpriteSwap;
-                button.interactable = false;
-                if (image != null && disabled != null)
-                    image.sprite = disabled;
-                break;
+        if (touch.image != null && sprite != null)
+        {
+            touch.image.overrideSprite = null;
+            touch.image.sprite = sprite;
         }
-
-        if (image != null)
-            image.color = Color.white;
     }
 
     private static void SetPanelActive(GameObject panel, bool active)
@@ -2169,6 +2161,7 @@ public partial class RoundController : MonoBehaviour
     private void RefreshHitboxDebug()
     {
 #if UNITY_EDITOR
+        RefreshDifficultDebug();
         if (!_hitboxDebugVisible)
             return;
         RebuildHitboxDebug();
@@ -2179,6 +2172,7 @@ public partial class RoundController : MonoBehaviour
     private void ToggleHitboxDebug()
     {
         _hitboxDebugVisible = !_hitboxDebugVisible;
+        RefreshHitboxDebug();
         if (!_hitboxDebugVisible)
         {
             if (_hitboxDebugImage != null)
@@ -2188,8 +2182,34 @@ public partial class RoundController : MonoBehaviour
             return;
         }
 
-        RebuildHitboxDebug();
         RefreshAimDebug();
+    }
+
+    private void RefreshDifficultDebug()
+    {
+        bool visible = _hitboxDebugVisible && _activeRound != null;
+        if (visible && _difficultDebug == null && enemyBodyImage != null && enemyBodyImage.canvas != null)
+        {
+            var label = new GameObject("DifficultDebug", typeof(RectTransform), typeof(TextMeshProUGUI));
+            label.transform.SetParent(enemyBodyImage.canvas.rootCanvas.transform, false);
+            _difficultDebug = label.GetComponent<TextMeshProUGUI>();
+            _difficultDebug.alignment = TextAlignmentOptions.Center;
+            _difficultDebug.fontSize = 24f;
+            _difficultDebug.raycastTarget = false;
+
+            RectTransform rect = _difficultDebug.rectTransform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(0f, -12f);
+            rect.sizeDelta = new Vector2(200f, 36f);
+        }
+
+        if (_difficultDebug == null)
+            return;
+
+        _difficultDebug.gameObject.SetActive(visible);
+        if (visible)
+            _difficultDebug.text = $"Difficult: {(IsTraining ? 0 : _activeRound.GetDifficult(enemyReshotDelayRange))}";
     }
 
     private void ToggleTimingDebug()

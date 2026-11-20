@@ -1,0 +1,2392 @@
+fileFormatVersion: 2
+guid: 88f299c6ad8d91c499295301bfe5ba6d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5453266352856983097
+    second: UI Elements - first sheet_0
+  - first:
+      213: 1259030350200310498
+    second: UI Elements - first sheet_1
+  - first:
+      213: 1073351840491325850
+    second: UI Elements - first sheet_2
+  - first:
+      213: 575670171059128857
+    second: UI Elements - first sheet_3
+  - first:
+      213: 480997535539261609
+    second: UI Elements - first sheet_4
+  - first:
+      213: -5630603663253622319
+    second: UI Elements - first sheet_5
+  - first:
+      213: -4124512818121533671
+    second: UI Elements - first sheet_6
+  - first:
+      213: -7682184652673915277
+    second: UI Elements - first sheet_7
+  - first:
+      213: -8863991303536844379
+    second: UI Elements - first sheet_8
+  - first:
+      213: -4231942526562067110
+    second: UI Elements - first sheet_9
+  - first:
+      213: 3003714183089650290
+    second: UI Elements - first sheet_10
+  - first:
+      213: 2557303930783906910
+    second: UI Elements - first sheet_11
+  - first:
+      213: -3054606583448941599
+    second: UI Elements - first sheet_12
+  - first:
+      213: 3571726081736243180
+    second: UI Elements - first sheet_13
+  - first:
+      213: -4939337940830615360
+    second: UI Elements - first sheet_14
+  - first:
+      213: -1488746864742041377
+    second: UI Elements - first sheet_15
+  - first:
+      213: -41087965334511042
+    second: UI Elements - first sheet_16
+  - first:
+      213: -8599213455336142667
+    second: UI Elements - first sheet_17
+  - first:
+      213: 8694666146846771867
+    second: UI Elements - first sheet_18
+  - first:
+      213: -490425334688565006
+    second: UI Elements - first sheet_19
+  - first:
+      213: -5490169686308350139
+    second: UI Elements - first sheet_20
+  - first:
+      213: -3188209847673607856
+    second: UI Elements - first sheet_21
+  - first:
+      213: 9064922486918759405
+    second: UI Elements - first sheet_22
+  - first:
+      213: -6252338560609684908
+    second: UI Elements - first sheet_23
+  - first:
+      213: -664335269952601637
+    second: UI Elements - first sheet_24
+  - first:
+      213: -397061632651811477
+    second: UI Elements - first sheet_25
+  - first:
+      213: -3861399694183543464
+    second: UI Elements - first sheet_26
+  - first:
+      213: 1842107573760054274
+    second: UI Elements - first sheet_27
+  - first:
+      213: 742219927531530374
+    second: UI Elements - first sheet_28
+  - first:
+      213: -3040943164141594370
+    second: UI Elements - first sheet_29
+  - first:
+      213: 7066875456182181156
+    second: UI Elements - first sheet_30
+  - first:
+      213: -5560053314057337891
+    second: UI Elements - first sheet_31
+  - first:
+      213: 4829590716969332530
+    second: UI Elements - first sheet_32
+  - first:
+      213: 6061209372121118125
+    second: UI Elements - first sheet_33
+  - first:
+      213: -5997614801739172545
+    second: UI Elements - first sheet_34
+  - first:
+      213: 799713141848828042
+    second: UI Elements - first sheet_35
+  - first:
+      213: -4068174158539033762
+    second: UI Elements - first sheet_36
+  - first:
+      213: -4056237558291070595
+    second: UI Elements - first sheet_37
+  - first:
+      213: -4650526804241901372
+    second: UI Elements - first sheet_38
+  - first:
+      213: 4817556312013740230
+    second: UI Elements - first sheet_39
+  - first:
+      213: 1742940855904118729
+    second: UI Elements - first sheet_40
+  - first:
+      213: 8789748417601830219
+    second: UI Elements - first sheet_41
+  - first:
+      213: -2064634253378420882
+    second: UI Elements - first sheet_42
+  - first:
+      213: 4236039293253703647
+    second: UI Elements - first sheet_43
+  - first:
+      213: -7278431174989171553
+    second: UI Elements - first sheet_44
+  - first:
+      213: 2318025083776337228
+    second: UI Elements - first sheet_45
+  - first:
+      213: 5613699453061384738
+    second: UI Elements - first sheet_46
+  - first:
+      213: -3731565023372667944
+    second: UI Elements - first sheet_47
+  - first:
+      213: -683613430968177022
+    second: UI Elements - first sheet_48
+  - first:
+      213: -6045971938222670689
+    second: UI Elements - first sheet_49
+  - first:
+      213: 4926469909627019654
+    second: UI Elements - first sheet_50
+  - first:
+      213: -2968637633677903298
+    second: UI Elements - first sheet_51
+  - first:
+      213: 4954342701165972976
+    second: UI Elements - first sheet_52
+  - first:
+      213: 7969373273958172407
+    second: UI Elements - first sheet_53
+  - first:
+      213: -8500883473523720567
+    second: UI Elements - first sheet_54
+  - first:
+      213: -6118237788542158769
+    second: UI Elements - first sheet_55
+  - first:
+      213: 6166344059450668959
+    second: UI Elements - first sheet_56
+  - first:
+      213: -5053503705256878135
+    second: UI Elements - first sheet_57
+  - first:
+      213: 7459029225421431911
+    second: UI Elements - first sheet_58
+  - first:
+      213: -337684660853189610
+    second: UI Elements - first sheet_59
+  - first:
+      213: -1673308204909715848
+    second: UI Elements - first sheet_60
+  - first:
+      213: 7864311200465374493
+    second: UI Elements - first sheet_61
+  - first:
+      213: -4531002071582856276
+    second: UI Elements - first sheet_62
+  - first:
+      213: -2176803877963027868
+    second: UI Elements - first sheet_63
+  - first:
+      213: -2061075579430655428
+    second: UI Elements - first sheet_64
+  - first:
+      213: -333640342931325282
+    second: UI Elements - first sheet_65
+  - first:
+      213: -3039757704297051935
+    second: UI Elements - first sheet_66
+  - first:
+      213: -1980509443220612937
+    second: UI Elements - first sheet_67
+  - first:
+      213: 6310195903414821823
+    second: UI Elements - first sheet_68
+  - first:
+      213: -3686610880095777076
+    second: UI Elements - first sheet_69
+  - first:
+      213: -1781177668889842273
+    second: UI Elements - first sheet_70
+  - first:
+      213: -8848439644685454846
+    second: UI Elements - first sheet_71
+  - first:
+      213: 3656778688256788096
+    second: UI Elements - first sheet_72
+  - first:
+      213: 6505077137143885545
+    second: UI Elements - first sheet_73
+  - first:
+      213: 3047704395729700335
+    second: UI Elements - first sheet_74
+  - first:
+      213: 3530737753185773994
+    second: UI Elements - first sheet_75
+  - first:
+      213: -4594190259469641504
+    second: UI Elements - first sheet_76
+  - first:
+      213: 410043480908488637
+    second: UI Elements - first sheet_77
+  - first:
+      213: -8053581189298472607
+    second: UI Elements - first sheet_78
+  - first:
+      213: -7922018706066722717
+    second: UI Elements - first sheet_79
+  - first:
+      213: 7013945759989059873
+    second: UI Elements - first sheet_80
+  - first:
+      213: -8921703206489286598
+    second: UI Elements - first sheet_81
+  - first:
+      213: -2952685338257596601
+    second: UI Elements - first sheet_82
+  - first:
+      213: 5089985051319000416
+    second: UI Elements - first sheet_83
+  - first:
+      213: -1609985195401898919
+    second: UI Elements - first sheet_84
+  - first:
+      213: 9066917237009430143
+    second: UI Elements - first sheet_85
+  - first:
+      213: -6743486799307855772
+    second: UI Elements - first sheet_86
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: UI Elements - first sheet_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1273
+        width: 1009
+        height: 255
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93661a3fad4edab40800000000000000
+      internalID: 5453266352856983097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_1
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 819
+        width: 649
+        height: 479
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ea0021de69f87110800000000000000
+      internalID: 1259030350200310498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_2
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 1323
+        width: 97
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a994f73efcf45ee00800000000000000
+      internalID: 1073351840491325850
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_3
+      rect:
+        serializedVersion: 2
+        x: 712
+        y: 1323
+        width: 106
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91a84c578f03df700800000000000000
+      internalID: 575670171059128857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_4
+      rect:
+        serializedVersion: 2
+        x: 746
+        y: 1271
+        width: 45
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a0f7abc5b8dca600800000000000000
+      internalID: 480997535539261609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_5
+      rect:
+        serializedVersion: 2
+        x: 800
+        y: 1271
+        width: 9
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d131ccecc31cd1b0800000000000000
+      internalID: -5630603663253622319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_6
+      rect:
+        serializedVersion: 2
+        x: 827
+        y: 1270
+        width: 16
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 917125cc179c2c6c0800000000000000
+      internalID: -4124512818121533671
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_7
+      rect:
+        serializedVersion: 2
+        x: 644
+        y: 1079
+        width: 365
+        height: 185
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 376e966a2c5636590800000000000000
+      internalID: -7682184652673915277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_8
+      rect:
+        serializedVersion: 2
+        x: 664
+        y: 841
+        width: 153
+        height: 223
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a1e8847fd6ccf480800000000000000
+      internalID: -8863991303536844379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_9
+      rect:
+        serializedVersion: 2
+        x: 800
+        y: 999
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5d1662a1be1545c0800000000000000
+      internalID: -4231942526562067110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_10
+      rect:
+        serializedVersion: 2
+        x: 836
+        y: 817
+        width: 175
+        height: 261
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27a7cd992265fa920800000000000000
+      internalID: 3003714183089650290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_11
+      rect:
+        serializedVersion: 2
+        x: 726
+        y: 917
+        width: 11
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5cb519306e5d7320800000000000000
+      internalID: 2557303930783906910
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_12
+      rect:
+        serializedVersion: 2
+        x: 694
+        y: 879
+        width: 11
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ebc4f01f7bdb95d0800000000000000
+      internalID: -3054606583448941599
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_13
+      rect:
+        serializedVersion: 2
+        x: 704
+        y: 884
+        width: 15
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce7f2e092f1519130800000000000000
+      internalID: 3571726081736243180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_14
+      rect:
+        serializedVersion: 2
+        x: 710
+        y: 852
+        width: 51
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c88e230052f37bb0800000000000000
+      internalID: -4939337940830615360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_15
+      rect:
+        serializedVersion: 2
+        x: 832
+        y: 887
+        width: 25
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd8f29e3d98e65be0800000000000000
+      internalID: -1488746864742041377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_16
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 863
+        width: 19
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3261b596b60e6ff0800000000000000
+      internalID: -41087965334511042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_17
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 879
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b80ee64ce479a880800000000000000
+      internalID: -8599213455336142667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_18
+      rect:
+        serializedVersion: 2
+        x: 152
+        y: 866
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9a8a635bc8a9a870800000000000000
+      internalID: 8694666146846771867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_19
+      rect:
+        serializedVersion: 2
+        x: 456
+        y: 863
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f83909a1c8a139f0800000000000000
+      internalID: -490425334688565006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_20
+      rect:
+        serializedVersion: 2
+        x: 688
+        y: 865
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54719fa22cffec3b0800000000000000
+      internalID: -5490169686308350139
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_21
+      rect:
+        serializedVersion: 2
+        x: 696
+        y: 853
+        width: 15
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0592300190431c3d0800000000000000
+      internalID: -3188209847673607856
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_22
+      rect:
+        serializedVersion: 2
+        x: 716
+        y: 821
+        width: 85
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de34e3d49f21dcd70800000000000000
+      internalID: 9064922486918759405
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_23
+      rect:
+        serializedVersion: 2
+        x: 978
+        y: 851
+        width: 15
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 452f167943b3b39a0800000000000000
+      internalID: -6252338560609684908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_24
+      rect:
+        serializedVersion: 2
+        x: 608
+        y: 839
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd146be779ec7c6f0800000000000000
+      internalID: -664335269952601637
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_25
+      rect:
+        serializedVersion: 2
+        x: 880
+        y: 847
+        width: 15
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b652adf7c8a5d7af0800000000000000
+      internalID: -397061632651811477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_26
+      rect:
+        serializedVersion: 2
+        x: 988
+        y: 838
+        width: 11
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 85d436ccf6d896ac0800000000000000
+      internalID: -3861399694183543464
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_27
+      rect:
+        serializedVersion: 2
+        x: 998
+        y: 837
+        width: 9
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2045604141b709910800000000000000
+      internalID: 1842107573760054274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_28
+      rect:
+        serializedVersion: 2
+        x: 1008
+        y: 837
+        width: 16
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 688abb57715ec4a00800000000000000
+      internalID: 742219927531530374
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_29
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 639
+        width: 297
+        height: 195
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef81037cd466cc5d0800000000000000
+      internalID: -3040943164141594370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_30
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 655
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42d5aa519c5921260800000000000000
+      internalID: 7066875456182181156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_31
+      rect:
+        serializedVersion: 2
+        x: 174
+        y: 651
+        width: 7
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd3016328f8b6d2b0800000000000000
+      internalID: -5560053314057337891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_32
+      rect:
+        serializedVersion: 2
+        x: 178
+        y: 649
+        width: 13
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23f2b773b27260340800000000000000
+      internalID: 4829590716969332530
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_33
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 641
+        width: 115
+        height: 165
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da53c8e6fcdbd1450800000000000000
+      internalID: 6061209372121118125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_34
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 677
+        width: 21
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3536b25d1134cca0800000000000000
+      internalID: -5997614801739172545
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_35
+      rect:
+        serializedVersion: 2
+        x: 372
+        y: 677
+        width: 15
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a886c1e8dd6291b00800000000000000
+      internalID: 799713141848828042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_36
+      rect:
+        serializedVersion: 2
+        x: 382
+        y: 653
+        width: 25
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e537bdb2821fa87c0800000000000000
+      internalID: -4068174158539033762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_37
+      rect:
+        serializedVersion: 2
+        x: 412
+        y: 645
+        width: 183
+        height: 181
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d71867d7e6955b7c0800000000000000
+      internalID: -4056237558291070595
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_38
+      rect:
+        serializedVersion: 2
+        x: 517
+        y: 673
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c89ab6d282067fb0800000000000000
+      internalID: -4650526804241901372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_39
+      rect:
+        serializedVersion: 2
+        x: 592
+        y: 636
+        width: 129
+        height: 194
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c81507f0f56bd240800000000000000
+      internalID: 4817556312013740230
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_40
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 649
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c72ea4597b203810800000000000000
+      internalID: 1742940855904118729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_41
+      rect:
+        serializedVersion: 2
+        x: 706
+        y: 644
+        width: 45
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4d7530ad957bf970800000000000000
+      internalID: 8789748417601830219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_42
+      rect:
+        serializedVersion: 2
+        x: 731
+        y: 651
+        width: 277
+        height: 158
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6f7640e512f853e0800000000000000
+      internalID: -2064634253378420882
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_43
+      rect:
+        serializedVersion: 2
+        x: 762
+        y: 641
+        width: 33
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd7dbf03b4f69ca30800000000000000
+      internalID: 4236039293253703647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_44
+      rect:
+        serializedVersion: 2
+        x: 844
+        y: 662
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9434acb861ddfa90800000000000000
+      internalID: -7278431174989171553
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_45
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 235
+        width: 384
+        height: 390
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c450fe248874b2020800000000000000
+      internalID: 2318025083776337228
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_46
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 159
+        width: 608
+        height: 479
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22a478fe8edd7ed40800000000000000
+      internalID: 5613699453061384738
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_47
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 623
+        width: 24
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d39995c161d63cc0800000000000000
+      internalID: -3731565023372667944
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_48
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 283
+        width: 9
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28ea47bd4315386f0800000000000000
+      internalID: -683613430968177022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_49
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 285
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9cf14c1e84681ca0800000000000000
+      internalID: -6045971938222670689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_50
+      rect:
+        serializedVersion: 2
+        x: 392
+        y: 277
+        width: 15
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68128fff7465e5440800000000000000
+      internalID: 4926469909627019654
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_51
+      rect:
+        serializedVersion: 2
+        x: 406
+        y: 275
+        width: 9
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3ab5c9fcc74dc6d0800000000000000
+      internalID: -2968637633677903298
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_52
+      rect:
+        serializedVersion: 2
+        x: 912
+        y: 269
+        width: 39
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0fd0c8eff6c51c440800000000000000
+      internalID: 4954342701165972976
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_53
+      rect:
+        serializedVersion: 2
+        x: 948
+        y: 258
+        width: 31
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f6c4c4e4c6e89e60800000000000000
+      internalID: 7969373273958172407
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_54
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 253
+        width: 45
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98e31ab358bc60a80800000000000000
+      internalID: -8500883473523720567
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_55
+      rect:
+        serializedVersion: 2
+        x: 656
+        y: 273
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f48b29aa527a71ba0800000000000000
+      internalID: -6118237788542158769
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_56
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 241
+        width: 39
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f97b56a5041439550800000000000000
+      internalID: 6166344059450668959
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_57
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 245
+        width: 15
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9cf1b0997295ed9b0800000000000000
+      internalID: -5053503705256878135
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_58
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 235
+        width: 38
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76460869f8bc38760800000000000000
+      internalID: 7459029225421431911
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_59
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 235
+        width: 7
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6145fbf079d405bf0800000000000000
+      internalID: -337684660853189610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_60
+      rect:
+        serializedVersion: 2
+        x: 644
+        y: 237
+        width: 19
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87e1c9e9d0737c8e0800000000000000
+      internalID: -1673308204909715848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_61
+      rect:
+        serializedVersion: 2
+        x: 678
+        y: 237
+        width: 11
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1d4dd2be55a32d60800000000000000
+      internalID: 7864311200465374493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_62
+      rect:
+        serializedVersion: 2
+        x: 850
+        y: 209
+        width: 118
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cabaeb64f95ae11c0800000000000000
+      internalID: -4531002071582856276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_63
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 401
+        height: 228
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46a225cf7607ac1e0800000000000000
+      internalID: -2176803877963027868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_64
+      rect:
+        serializedVersion: 2
+        x: 334
+        y: 214
+        width: 9
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3aadc83ea69563e0800000000000000
+      internalID: -2061075579430655428
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_65
+      rect:
+        serializedVersion: 2
+        x: 342
+        y: 191
+        width: 51
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9eb6d430ebae5bf0800000000000000
+      internalID: -333640342931325282
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_66
+      rect:
+        serializedVersion: 2
+        x: 414
+        y: 223
+        width: 20
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e80e18297c90d5d0800000000000000
+      internalID: -3039757704297051935
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_67
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 223
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b857829721d384e0800000000000000
+      internalID: -1980509443220612937
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_68
+      rect:
+        serializedVersion: 2
+        x: 550
+        y: 208
+        width: 9
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb36a26cdb1529750800000000000000
+      internalID: 6310195903414821823
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_69
+      rect:
+        serializedVersion: 2
+        x: 560
+        y: 223
+        width: 15
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cce0dc2efe686dcc0800000000000000
+      internalID: -3686610880095777076
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_70
+      rect:
+        serializedVersion: 2
+        x: 718
+        y: 183
+        width: 29
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9d66f3e85cf747e0800000000000000
+      internalID: -1781177668889842273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_71
+      rect:
+        serializedVersion: 2
+        x: 408
+        y: 207
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2023a023607043580800000000000000
+      internalID: -8848439644685454846
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_72
+      rect:
+        serializedVersion: 2
+        x: 956
+        y: 177
+        width: 25
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 086c3cfa7dc7fb230800000000000000
+      internalID: 3656778688256788096
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_73
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 148
+        width: 11
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9eee9fbd03da64a50800000000000000
+      internalID: 6505077137143885545
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_74
+      rect:
+        serializedVersion: 2
+        x: 408
+        y: 15
+        width: 177
+        height: 191
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe58ddf100f9b4a20800000000000000
+      internalID: 3047704395729700335
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_75
+      rect:
+        serializedVersion: 2
+        x: 613
+        y: 0
+        width: 136
+        height: 164
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa9e2b5a743bff030800000000000000
+      internalID: 3530737753185773994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_76
+      rect:
+        serializedVersion: 2
+        x: 790
+        y: 124
+        width: 36
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e890c1dc482e30c0800000000000000
+      internalID: -4594190259469641504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_77
+      rect:
+        serializedVersion: 2
+        x: 827
+        y: 133
+        width: 149
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbfd3069f54c0b500800000000000000
+      internalID: 410043480908488637
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_78
+      rect:
+        serializedVersion: 2
+        x: 298
+        y: 25
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 169b81af39eeb3090800000000000000
+      internalID: -8053581189298472607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_79
+      rect:
+        serializedVersion: 2
+        x: 302
+        y: 23
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 360b4e0a5f55f0290800000000000000
+      internalID: -7922018706066722717
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_80
+      rect:
+        serializedVersion: 2
+        x: 310
+        y: 25
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 121510ad18a865160800000000000000
+      internalID: 7013945759989059873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_81
+      rect:
+        serializedVersion: 2
+        x: 318
+        y: 19
+        width: 17
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a381eb1f33ebf2480800000000000000
+      internalID: -8921703206489286598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_82
+      rect:
+        serializedVersion: 2
+        x: 328
+        y: 35
+        width: 7
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74fd6af2454f507d0800000000000000
+      internalID: -2952685338257596601
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_83
+      rect:
+        serializedVersion: 2
+        x: 334
+        y: 37
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06ddaefaf6243a640800000000000000
+      internalID: 5089985051319000416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_84
+      rect:
+        serializedVersion: 2
+        x: 413
+        y: 39
+        width: 10
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9549e6eaefe28a9e0800000000000000
+      internalID: -1609985195401898919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_85
+      rect:
+        serializedVersion: 2
+        x: 758
+        y: 37
+        width: 153
+        height: 94
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7630df303924dd70800000000000000
+      internalID: 9066917237009430143
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI Elements - first sheet_86
+      rect:
+        serializedVersion: 2
+        x: 980
+        y: 13
+        width: 29
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46828bb0c725a62a0800000000000000
+      internalID: -6743486799307855772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      UI Elements - first sheet_0: 5453266352856983097
+      UI Elements - first sheet_1: 1259030350200310498
+      UI Elements - first sheet_10: 3003714183089650290
+      UI Elements - first sheet_11: 2557303930783906910
+      UI Elements - first sheet_12: -3054606583448941599
+      UI Elements - first sheet_13: 3571726081736243180
+      UI Elements - first sheet_14: -4939337940830615360
+      UI Elements - first sheet_15: -1488746864742041377
+      UI Elements - first sheet_16: -41087965334511042
+      UI Elements - first sheet_17: -8599213455336142667
+      UI Elements - first sheet_18: 8694666146846771867
+      UI Elements - first sheet_19: -490425334688565006
+      UI Elements - first sheet_2: 1073351840491325850
+      UI Elements - first sheet_20: -5490169686308350139
+      UI Elements - first sheet_21: -3188209847673607856
+      UI Elements - first sheet_22: 9064922486918759405
+      UI Elements - first sheet_23: -6252338560609684908
+      UI Elements - first sheet_24: -664335269952601637
+      UI Elements - first sheet_25: -397061632651811477
+      UI Elements - first sheet_26: -3861399694183543464
+      UI Elements - first sheet_27: 1842107573760054274
+      UI Elements - first sheet_28: 742219927531530374
+      UI Elements - first sheet_29: -3040943164141594370
+      UI Elements - first sheet_3: 575670171059128857
+      UI Elements - first sheet_30: 7066875456182181156
+      UI Elements - first sheet_31: -5560053314057337891
+      UI Elements - first sheet_32: 4829590716969332530
+      UI Elements - first sheet_33: 6061209372121118125
+      UI Elements - first sheet_34: -5997614801739172545
+      UI Elements - first sheet_35: 799713141848828042
+      UI Elements - first sheet_36: -4068174158539033762
+      UI Elements - first sheet_37: -4056237558291070595
+      UI Elements - first sheet_38: -4650526804241901372
+      UI Elements - first sheet_39: 4817556312013740230
+      UI Elements - first sheet_4: 480997535539261609
+      UI Elements - first sheet_40: 1742940855904118729
+      UI Elements - first sheet_41: 8789748417601830219
+      UI Elements - first sheet_42: -2064634253378420882
+      UI Elements - first sheet_43: 4236039293253703647
+      UI Elements - first sheet_44: -7278431174989171553
+      UI Elements - first sheet_45: 2318025083776337228
+      UI Elements - first sheet_46: 5613699453061384738
+      UI Elements - first sheet_47: -3731565023372667944
+      UI Elements - first sheet_48: -683613430968177022
+      UI Elements - first sheet_49: -6045971938222670689
+      UI Elements - first sheet_5: -5630603663253622319
+      UI Elements - first sheet_50: 4926469909627019654
+      UI Elements - first sheet_51: -2968637633677903298
+      UI Elements - first sheet_52: 4954342701165972976
+      UI Elements - first sheet_53: 7969373273958172407
+      UI Elements - first sheet_54: -8500883473523720567
+      UI Elements - first sheet_55: -6118237788542158769
+      UI Elements - first sheet_56: 6166344059450668959
+      UI Elements - first sheet_57: -5053503705256878135
+      UI Elements - first sheet_58: 7459029225421431911
+      UI Elements - first sheet_59: -337684660853189610
+      UI Elements - first sheet_6: -4124512818121533671
+      UI Elements - first sheet_60: -1673308204909715848
+      UI Elements - first sheet_61: 7864311200465374493
+      UI Elements - first sheet_62: -4531002071582856276
+      UI Elements - first sheet_63: -2176803877963027868
+      UI Elements - first sheet_64: -2061075579430655428
+      UI Elements - first sheet_65: -333640342931325282
+      UI Elements - first sheet_66: -3039757704297051935
+      UI Elements - first sheet_67: -1980509443220612937
+      UI Elements - first sheet_68: 6310195903414821823
+      UI Elements - first sheet_69: -3686610880095777076
+      UI Elements - first sheet_7: -7682184652673915277
+      UI Elements - first sheet_70: -1781177668889842273
+      UI Elements - first sheet_71: -8848439644685454846
+      UI Elements - first sheet_72: 3656778688256788096
+      UI Elements - first sheet_73: 6505077137143885545
+      UI Elements - first sheet_74: 3047704395729700335
+      UI Elements - first sheet_75: 3530737753185773994
+      UI Elements - first sheet_76: -4594190259469641504
+      UI Elements - first sheet_77: 410043480908488637
+      UI Elements - first sheet_78: -8053581189298472607
+      UI Elements - first sheet_79: -7922018706066722717
+      UI Elements - first sheet_8: -8863991303536844379
+      UI Elements - first sheet_80: 7013945759989059873
+      UI Elements - first sheet_81: -8921703206489286598
+      UI Elements - first sheet_82: -2952685338257596601
+      UI Elements - first sheet_83: 5089985051319000416
+      UI Elements - first sheet_84: -1609985195401898919
+      UI Elements - first sheet_85: 9066917237009430143
+      UI Elements - first sheet_86: -6743486799307855772
+      UI Elements - first sheet_9: -4231942526562067110
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

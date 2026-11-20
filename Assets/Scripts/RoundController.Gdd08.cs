@@ -91,20 +91,10 @@ public partial class RoundController
         if (menuButton == null)
             return;
 
-        // Active only while the duel is running and no modal overlays are up.
-        bool active = IsDuelInProgress()
-                      && !_paused
-                      && !IsPanelShowing(roundStartPanel)
-                      && !IsPanelShowing(roundFinishPanel)
-                      && !IsPanelShowing(roundWinPanel)
-                      && !IsPanelShowing(roundLosePanel)
-                      && !IsPanelShowing(levelCompletePanel)
-                      && !IsPanelShowing(areYouSureAbortPanel)
-                      && !IsPanelShowing(_seriesSummary)
-                      && !IsPanelShowing(_areYouSure)
-                      && !IsPanelShowing(_authPrompt)
-                      && !IsPanelShowing(pauseMenuRoot);
-        menuButton.interactable = active;
+        menuButton.interactable = (IsTraining || IsDuelInProgress())
+                                  && !_paused
+                                  && !YandexGamesSdk.PlatformPaused
+                                  && !IsModalOverlayOpen();
     }
 
     private bool ShouldOpenPauseMenuOnPlatformPause()
@@ -114,7 +104,7 @@ public partial class RoundController
         // GDD 0.8: while RoundStart / RoundFinish / etc. are up, game is already stopped.
         if (IsModalOverlayOpen())
             return false;
-        return IsDuelInProgress();
+        return IsTraining || IsDuelInProgress();
     }
 
     private void ShowEnemyMissMessage()
