@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -78,6 +79,7 @@ public partial class RoundController
         WireChild(roundStartPanel, "ControlBtns/ContinueBtn", OnStartClicked);
         WireChild(roundStartPanel, "ControlBtns/ExitBtn", OnAbortToMapClicked);
         WireChild(roundWinPanel, "ControlBtns/ContinueBtn", OnNextRoundGdd10);
+        WireChild(roundWinPanel, "ControlBtns/ExitBtn", OnAbortToMapClicked);
         WireChild(roundWinPanel, "ControlBtns/CollectBtn", CommitCityClearAndShowLevelComplete);
         WireChild(roundLosePanel, "ControlBtns/RetryBtn", OnRetryCityGdd10);
         WireChild(roundLosePanel, "ControlBtns/ExitBtn", OnPauseExitClicked);
@@ -98,6 +100,7 @@ public partial class RoundController
         WireChild(levelCompletePanel, "NextCity", OnNextCityGdd10);
         WireChild(levelCompletePanel, "SubmitPanel/SubmitBtn", OnHttpSubmitClicked);
         WireChild(levelCompletePanel, "SubmitLine/SubmitBtn", OnHttpSubmitClicked);
+        BindCompletionLeaderboardButton();
         RefreshCounters();
     }
 
@@ -135,7 +138,7 @@ public partial class RoundController
 
     private void ShowAbortConfirmation()
     {
-        SetChildText(areYouSureAbortPanel, "Burned/ResultText", $"You will lose ${_cityRun.RunDollars}");
+        SetChildText(areYouSureAbortPanel, "Burned/ResultText", LocalizationTables.Format("abort_loss", _cityRun.RunDollars));
         SetPanelActive(areYouSureAbortPanel, true);
         areYouSureAbortPanel.transform.SetAsLastSibling();
         RefreshMenuButtonInteractable();
@@ -209,9 +212,7 @@ public partial class RoundController
         string enemy = _activeRound?.LocalizedEnemyName;
         if (!string.IsNullOrEmpty(enemy))
         {
-            string result = LocalizationTables.Language == "ru"
-                ? (win ? $"Победа над {enemy}" : $"Поражение в дуэли с {enemy}")
-                : (win ? $"{enemy} Defeated" : $"{enemy} Defeated You");
+            string result = LocalizationTables.Format(win ? "enemy_defeated" : "enemy_defeated_you", enemy);
             SetChildText(win ? roundWinPanel : roundLosePanel, "TitleLine/WinLoseTitle", result);
         }
         if (roundResultText != null)
@@ -224,10 +225,14 @@ public partial class RoundController
         else
         {
             SetChildText(roundLosePanel, "Title", title);
-            string reason = _outcome == RoundOutcome.FalseStart
+            bool falseStart = _outcome == RoundOutcome.FalseStart;
+            string reason = LocalizationTables.Get(falseStart
                 ? LocalizationTables.Keys.FalseStart
-                : LocalizationTables.Keys.EnemyWins;
-            SetChildText(roundLosePanel, "Reason", LocalizationTables.Get(reason));
+                : LocalizationTables.Keys.EnemyWins);
+            SetChildText(roundLosePanel, "Reason", reason);
+            string seconds = CurrentEnemyReactionTime().ToString("0.00", CultureInfo.InvariantCulture);
+            SetChildText(roundLosePanel, "TimeLine/ResultText", falseStart ? reason :
+                LocalizationTables.Format("enemy_reaction_time", LocalizationTables.Format("seconds_short", seconds)));
         }
     }
 
@@ -325,7 +330,6 @@ public partial class RoundController
         if (nicknameLabel != null)
         {
             nicknameLabel.richText = false;
-            nicknameLabel.text = nick + " submitted";
             SetChildActive(levelCompletePanel, "SubmitLine/InputNickname", false);
             SetChildActive(levelCompletePanel, "SubmitLine/SubmitBtn", false);
             nicknameLabel.gameObject.SetActive(true);
@@ -335,6 +339,8 @@ public partial class RoundController
             SetChildActive(levelCompletePanel, "SubmitLine", false);
         }
         SetChildActive(levelCompletePanel, "RecordedPanel", true);
+        _completionDeliveryFailed = false;
+        RefreshCompletionLeaderboard();
         HttpLeaderboards.Instance?.FlushPending();
     }
 

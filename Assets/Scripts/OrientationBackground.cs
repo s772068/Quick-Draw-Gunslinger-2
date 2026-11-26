@@ -16,7 +16,7 @@ public class OrientationBackground : MonoBehaviour
     [Tooltip("Legacy aliases — used if backVert/backHor are empty.")]
     [SerializeField] private Sprite portraitSprite;
     [SerializeField] private Sprite landscapeSprite;
-    [SerializeField] private bool fillRectWithoutPreserveAspect = true;
+    [SerializeField] private AspectRatioFitter coverFitter;
 
     private int _lastWidth = -1;
     private int _lastHeight = -1;
@@ -51,10 +51,8 @@ public class OrientationBackground : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        if (targetImage == null)
-            targetImage = GetComponent<Image>();
-        if (!Application.isPlaying)
-            ApplyForCurrentView(force: true);
+        _lastWidth = -1;
+        _lastHeight = -1;
     }
 #endif
 
@@ -101,8 +99,11 @@ public class OrientationBackground : MonoBehaviour
         if (next != null && targetImage.sprite != next)
             targetImage.sprite = next;
 
-        if (fillRectWithoutPreserveAspect)
-            targetImage.preserveAspect = false;
+        if (coverFitter != null && targetImage.sprite != null)
+        {
+            Rect spriteRect = targetImage.sprite.rect;
+            coverFitter.aspectRatio = spriteRect.width / spriteRect.height;
+        }
     }
 
     private void GetViewSize(out int width, out int height)

@@ -2,8 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Keeps HUD duel controls inside the visible area with edge padding on every platform.
-/// Buttons use fixed center-anchored positions — shrinking HUD anchors clips them.
-/// This scales Vertical/HorizontalControls to fit instead.
+/// Keeps the portrait control layout and fits edge-anchored landscape controls.
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform))]
@@ -20,10 +19,12 @@ public class SafeAreaPadding : MonoBehaviour
     private Rect _lastSafe;
     private float _lastPad = float.NaN;
     private Vector2 _verticalDesignPos;
-    private Vector2 _horizontalDesignPos;
     private Vector2 _topDesignSizeDelta;
     private Vector2 _topDesignPos;
     private bool _designCaptured;
+
+    public Rect UsableRect { get; private set; }
+    public bool IsLandscape { get; private set; }
 
     private void Awake()
     {
@@ -83,8 +84,6 @@ public class SafeAreaPadding : MonoBehaviour
         AutoFind();
         if (verticalControls != null)
             _verticalDesignPos = verticalControls.anchoredPosition;
-        if (horizontalControls != null)
-            _horizontalDesignPos = horizontalControls.anchoredPosition;
         if (topPanel != null)
         {
             _topDesignSizeDelta = topPanel.sizeDelta;
@@ -130,6 +129,12 @@ public class SafeAreaPadding : MonoBehaviour
         float padR = Mathf.Max(pad, insetR);
         float padT = Mathf.Max(pad, insetT);
 
+        UsableRect = new Rect(
+            hudRect.xMin + padL, hudRect.yMin + padB,
+            Mathf.Max(1f, hudRect.width - padL - padR),
+            Mathf.Max(1f, hudRect.height - padB - padT));
+        IsLandscape = hudRect.width > hudRect.height;
+
         float leftRoom = Mathf.Max(1f, hudRect.width * 0.5f - padL);
         float rightRoom = Mathf.Max(1f, hudRect.width * 0.5f - padR);
         float bottomRoom = Mathf.Max(1f, hudRect.height * 0.5f - padB);
@@ -141,8 +146,28 @@ public class SafeAreaPadding : MonoBehaviour
         float shiftY = (padB - padT) * 0.5f;
 
         FitGroup(verticalControls, _verticalDesignPos, availHalfW, availHalfH, shiftX, shiftY);
-        FitGroup(horizontalControls, _horizontalDesignPos, availHalfW, availHalfH, shiftX, shiftY);
+        if (IsLandscape)
+            FitHorizontalControls();
         FitTopPanel(padL, padR, padT);
+    }
+
+    private void FitHorizontalControls()
+    {
+        if (horizontalControls == null)
+            return;
+
+        horizontalControls.offsetMin = UsableRect.min - _hud.rect.min;
+        horizontalControls.offsetMax = UsableRect.max - _hud.rect.max;
+        float maxSize = UsableRect.height * 0.18f;
+        foreach (Transform child in horizontalControls)
+        {
+            if (child is not RectTransform control)
+                continue;
+
+            float size = Mathf.Max(1f, control.rect.width, control.rect.height);
+            float scale = Mathf.Min(1f, maxSize / size);
+            control.localScale = new Vector3(scale, scale, 1f);
+        }
     }
 
     private static void FitGroup(

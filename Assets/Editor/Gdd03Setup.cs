@@ -60,7 +60,6 @@ public static class Gdd03Setup
         };
     }
 
-    [MenuItem("QDG2/Apply GDD 0.3 Setup")]
     public static void ApplyFromMenu()
     {
         SessionState.SetBool(AppliedFlagKey, false);
@@ -312,7 +311,7 @@ public static class Gdd03Setup
         return sprite;
     }
 
-    [MenuItem("QDG2/Build And Run WebGL (GDD 0.3)")]
+    [MenuItem("QDG2/Build and Run WebGL")]
     public static void BuildAndRunWebGl()
     {
         EnsureWebGlBuildProfile();

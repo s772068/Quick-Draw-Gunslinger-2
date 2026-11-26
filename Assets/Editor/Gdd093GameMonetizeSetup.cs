@@ -5,7 +5,7 @@ using UnityEditor;
 /// </summary>
 public static class Gdd093GameMonetizeSetup
 {
-    [MenuItem("QDG2/Apply GameMonetize WebGL Setup")]
+    [MenuItem("QDG2/WebGL Platform/GameMonetize")]
     public static void Apply()
     {
         PlayerSettings.WebGL.template = "PROJECT:QDG2_GM";

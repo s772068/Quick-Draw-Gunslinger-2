@@ -44,7 +44,7 @@ public class LevelSystem : MonoBehaviour
 
         string[] ids = { "bungler", "cowboy", "deputy", "sheriff", "gunslinger" };
         string[] enN = { "Bungler", "Cowboy", "Deputy", "Sheriff", "Gunslinger" };
-        string[] ruN = { "Недотёпа", "Ковбой", "Помошник шерифа", "Шериф", "Стрелок" };
+        string[] ruN = { "Недотёпа", "Ковбой", "Помощник шерифа", "Шериф", "Стрелок" };
         float[] ert = { 2.6f, 2.3f, 2.0f, 1.7f, 1.4f };
         var rounds = new RoundDefinition[5];
         for (int i = 0; i < 5; i++)
@@ -120,7 +120,7 @@ public class LevelDefinition : MonoBehaviour
     }
 
     public string LocalizedName =>
-        LocalizationTables.Language == "ru" ? displayNameRu : displayNameEn;
+        LocalizationTables.Get("city_" + cityId, LocalizationTables.IsRussian ? displayNameRu : displayNameEn);
 
     public int StarsForTotal(int totalDollars)
     {

@@ -9,6 +9,7 @@ public static class GameAudioSettings
     private const string PrefKey = "QDG2.SoundEnabled";
 
     private static bool _platformMuted;
+    private static AudioSource _uiAudioSource;
 
     public static bool SoundEnabled
     {
@@ -37,6 +38,24 @@ public static class GameAudioSettings
     public static void ToggleSound()
     {
         SoundEnabled = !SoundEnabled;
+    }
+
+    public static void PlayButtonClick(AudioClip clip)
+    {
+        if (clip == null || !SoundEnabled || PlatformMuted)
+            return;
+
+        if (_uiAudioSource == null)
+        {
+            // Let the click finish when a button loads another scene.
+            var audioObject = new GameObject("UI Audio");
+            Object.DontDestroyOnLoad(audioObject);
+            _uiAudioSource = audioObject.AddComponent<AudioSource>();
+            _uiAudioSource.playOnAwake = false;
+            _uiAudioSource.ignoreListenerPause = true;
+        }
+
+        _uiAudioSource.PlayOneShot(clip);
     }
 
     /// <summary>

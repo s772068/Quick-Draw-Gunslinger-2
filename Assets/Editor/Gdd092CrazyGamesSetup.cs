@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 public static class Gdd092CrazyGamesSetup
 {
-    [MenuItem("QDG2/Apply CrazyGames WebGL Setup (GDD 0.92)")]
+    [MenuItem("QDG2/WebGL Platform/CrazyGames")]
     public static void Apply()
     {
         PlayerSettings.WebGL.template = "PROJECT:QDG2_CG";
@@ -16,7 +16,7 @@ public static class Gdd092CrazyGamesSetup
         Debug.Log("GDD 0.92 CG setup: template QDG2_CG, Brotli compression.");
     }
 
-    [MenuItem("QDG2/Apply Yandex WebGL Setup (restore)")]
+    [MenuItem("QDG2/WebGL Platform/Yandex Games")]
     public static void RestoreYandex()
     {
         PlayerSettings.WebGL.template = "PROJECT:QDG2";

@@ -21,7 +21,6 @@ public static class Gdd05FontFix
         "Достань, взведи, стреляй" +
         "Quick Draw Gunslinger 2";
 
-    [MenuItem("QDG2/Fix Zantroke Font (RU)")]
     public static void Fix()
     {
         var fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);

@@ -18,7 +18,6 @@ public static class Gdd12SceneSetup
         "Assets/Scenes/MainMenu.unity"
     };
 
-    [MenuItem("QDG2/Rebuild 1.2 UI")]
     public static void RebuildUi()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode || !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -51,7 +50,6 @@ public static class Gdd12SceneSetup
         }
     }
 
-    [MenuItem("QDG2/Apply GDD 1.2")]
     public static void ApplyProjectScenes()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode)

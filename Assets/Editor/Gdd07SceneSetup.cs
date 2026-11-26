@@ -21,7 +21,6 @@ public static class Gdd07SceneSetup
         EditorApplication.delayCall += () => ApplyScene(scene);
     }
 
-    [MenuItem("QDG2/Apply GDD 0.7 Scene Objects")]
     public static void ApplyLoadedScenes()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode)

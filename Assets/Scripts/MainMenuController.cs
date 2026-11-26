@@ -69,7 +69,7 @@ public class MainMenuController : MonoBehaviour
         SetPanel(cityLeaderboardRoot, false);
         SetPanel(leaderboardsOverlayRoot, false);
         RefreshWorldMapProgress();
-        YandexGamesSdk.GameplayStop();
+        PlatformGameplay.Stop();
     }
 
     private static void EnsureSafeAreaPadding()
@@ -106,6 +106,12 @@ public class MainMenuController : MonoBehaviour
         LocalizationTables.LanguageChanged -= ApplyLocalizedTexts;
         LeaderboardCache.Ready -= OnLeaderboardsReady;
         LeaderboardCache.BoardChanged -= OnLeaderboardChanged;
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!YandexGamesSdk.SdkAvailable)
+            GameAudioSettings.SetPlatformMuted(!hasFocus);
     }
 
     private void OnLeaderboardsReady()
@@ -531,7 +537,7 @@ public class MainMenuController : MonoBehaviour
 
     private static string FormatPlayerResult(string board, string score)
     {
-        string player = LocalizationTables.IsRussian ? "Вы " : "You ";
+        string player = LocalizationTables.Get("player_you") + " ";
         if (LeaderboardCache.TryGet(board, out var page) && page.Ok && page.UserRank > 0)
             player += "#" + page.UserRank + " ";
         return player + score;
@@ -540,9 +546,9 @@ public class MainMenuController : MonoBehaviour
     private static string FormatCachedBoard(string board, bool money)
     {
         if (!LeaderboardCache.TryGet(board, out YandexLeaderboards.BoardPage page))
-            return LocalizationTables.IsRussian ? "Загрузка…" : "Loading…";
+            return LocalizationTables.Get("leaderboard_loading");
         if (!page.Ok)
-            return LocalizationTables.IsRussian ? "Таблица недоступна" : "Leaderboard unavailable";
+            return LocalizationTables.Get("leaderboard_unavailable");
         if (page.Entries == null || page.Entries.Length == 0)
             return "0";
 
@@ -600,12 +606,7 @@ public class MainMenuController : MonoBehaviour
 
     private static string CityName(int index)
     {
-        switch (index)
-        {
-            case 1: return "Dead Well";
-            case 2: return "Raven Rock";
-            default: return "Dry Creek";
-        }
+        return LocalizationTables.Get("city_" + LevelSystem.CityBoardId(index));
     }
 
     private static void SetPanel(GameObject panel, bool active)

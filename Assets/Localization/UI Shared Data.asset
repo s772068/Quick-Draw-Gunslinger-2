@@ -203,6 +203,182 @@ MonoBehaviour:
     m_Key: ok
     m_Metadata:
       m_Items: []
+  - m_Id: 17720766727446539
+    m_Key: play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446540
+    m_Key: locked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446541
+    m_Key: menu_start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446542
+    m_Key: explored_towns
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446543
+    m_Key: net_worth_leaderboard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446544
+    m_Key: player_heading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446545
+    m_Key: leaderboard_loading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446546
+    m_Key: leaderboard_unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446547
+    m_Key: player_you
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446548
+    m_Key: pause
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446549
+    m_Key: abort_run
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446550
+    m_Key: abort_loss
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446551
+    m_Key: town_top_result
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446552
+    m_Key: first_target
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446553
+    m_Key: next_target
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446554
+    m_Key: town_secured
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446555
+    m_Key: town_earnings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446556
+    m_Key: gain_if_leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446557
+    m_Key: enemy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446558
+    m_Key: city
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446559
+    m_Key: enemy_defeated
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446560
+    m_Key: enemy_defeated_you
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446561
+    m_Key: bounty_for
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446562
+    m_Key: you_lost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446563
+    m_Key: city_complete
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446564
+    m_Key: new_record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446565
+    m_Key: best_amount
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446566
+    m_Key: rank_number
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446567
+    m_Key: rank_missing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446568
+    m_Key: local_result
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446569
+    m_Key: submission_retry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446570
+    m_Key: submitting_score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446571
+    m_Key: score_on_leaderboard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446572
+    m_Key: seconds_short
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446573
+    m_Key: enemy_shot_delay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446574
+    m_Key: city_drycreek
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446575
+    m_Key: city_deadwell
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446576
+    m_Key: city_ravenrock
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446577
+    m_Key: enemy_bungler
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446578
+    m_Key: enemy_cowboy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446579
+    m_Key: enemy_deputy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446580
+    m_Key: enemy_sheriff
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446581
+    m_Key: enemy_gunslinger
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446582
+    m_Key: enemy_reaction_time
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

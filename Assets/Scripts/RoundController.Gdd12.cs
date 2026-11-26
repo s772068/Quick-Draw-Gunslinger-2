@@ -34,6 +34,7 @@ public partial class RoundController
     private Func<GameObject> _findTrainingHighlight;
     private GameObject _trainingModal;
     private TMP_Text _trainingBody;
+    private string _trainingBodyKey;
     private Button _trainingOk;
     private Button _trainingRetry;
     private Button _trainingReady;
@@ -149,7 +150,8 @@ public partial class RoundController
         StopGunFxRoutine();
         SetVisible(playerGun, false);
         SetVisible(crossfire != null ? crossfire.gameObject : null, false);
-        SetVisible(_hitMarker != null ? _hitMarker.gameObject : null, false);
+        HideGunFlash();
+        ResetTargetTiming();
         SetAimDim(false);
         ResetCrossfireToStart();
         SetBellState(fired: false);
@@ -163,27 +165,44 @@ public partial class RoundController
 
         RefreshTrainingActions();
         RefreshMenuButtonInteractable();
-        WarmUpAudio();
-        YandexGamesSdk.GameplayStart();
-        NoteLevelStartTime();
 
-        // 1) Wait for bell — on silent retry the 1.5s Ok-substitute IS the Bell delay (not doubled).
+        _trainingFrozen = true;
         if (_trainingSilent)
         {
             ShowTrainingOverlayOnly(FindBellHighlightTarget);
-            _trainingFrozen = true;
-            yield return TrainingWait(1.5f);
-            _trainingFrozen = false;
-            HideTrainingModal();
         }
         else
         {
-            yield return ShowTrainingStep(
-                LocalizationTables.Keys.ModalWait,
-                FindBellHighlightTarget,
-                TrainingAllow.Ok);
-            yield return TrainingWait(1.5f);
+            // Embedded strings are available while the localization tables load.
+            bool acknowledged = false;
+            void Acknowledge()
+            {
+                if (!TrainingPaused)
+                    acknowledged = true;
+            }
+
+            if (_trainingOk != null)
+                _trainingOk.onClick.AddListener(Acknowledge);
+            _trainingAllowed = TrainingAllow.Ok;
+            ShowTrainingModal(LocalizationTables.Keys.ModalWait, FindBellHighlightTarget,
+                showOk: true, showHitButtons: false);
+            while (!acknowledged)
+            {
+                if (Keyboard.current != null && Keyboard.current.enterKey.wasPressedThisFrame)
+                    Acknowledge();
+                yield return null;
+            }
+            if (_trainingOk != null)
+                _trainingOk.onClick.RemoveListener(Acknowledge);
+
+            HideTrainingModal();
         }
+
+        while (TrainingPaused)
+            yield return null;
+        WarmUpAudio();
+        NoteLevelStartTime();
+        yield return TrainingWait(1.5f);
 
         _bellFired = true;
         _phase = Phase.BellShown;
@@ -194,47 +213,52 @@ public partial class RoundController
         SetBellState(fired: true);
         // No enemy shoot loop in training.
 
-        // 2) Draw
-        yield return ShowTrainingStep(
+        BeginTrainingAction(
             LocalizationTables.Keys.ModalDraw,
             () => FindActionHighlightTarget(_drawActions, drawButton),
             TrainingAllow.Draw);
+        PlatformGameplay.Start();
+        while (_phase == Phase.BellShown)
+            yield return null;
 
-        // 3) Pull. The crosshair can start moving as soon as Pull is accepted on a retry.
         _trainingAwaitingMiddle = true;
-        yield return ShowTrainingStep(
+        BeginTrainingAction(
             LocalizationTables.Keys.ModalPull,
             () => FindActionHighlightTarget(_pullActions, pullButton),
             TrainingAllow.Pull);
+        while (_phase == Phase.Drawn)
+            yield return null;
 
-        // 4) The first pass explains aiming before releasing the crosshair.
         if (!_trainingSilent)
         {
-            ShowTrainingModal(LocalizationTables.Get(LocalizationTables.Keys.ModalAim),
+            ShowTrainingModal(LocalizationTables.Keys.ModalAim,
                 null, showOk: false, showHitButtons: false);
             yield return TrainingWait(1.5f);
-            HideTrainingModal();
-            _trainingFrozen = false;
         }
 
+        HideTrainingModal();
+        _trainingFrozen = false;
         while (_trainingAwaitingMiddle && (_phase == Phase.Aimed || _phase == Phase.AimedAfterMiss))
             yield return null;
 
-        // 5) Fire at middle
-        yield return ShowTrainingStep(
-            LocalizationTables.Keys.ModalFire,
-            () => FindActionHighlightTarget(_fireActions, fireButton),
-            TrainingAllow.Fire);
+        if (_phase == Phase.Aimed)
+        {
+            BeginTrainingAction(
+                LocalizationTables.Keys.ModalFire,
+                () => FindActionHighlightTarget(_fireActions, fireButton),
+                TrainingAllow.Fire);
+            while (_phase == Phase.Aimed)
+                yield return null;
+        }
 
+        HideTrainingModal();
+        _trainingAllowed = TrainingAllow.None;
+        _trainingFrozen = false;
         yield return TrainingWait(1.5f);
     }
 
-    private IEnumerator ShowTrainingStep(string bodyKey, Func<GameObject> findHighlight, TrainingAllow allow)
+    private void BeginTrainingAction(string bodyKey, Func<GameObject> findHighlight, TrainingAllow allow)
     {
-        while (TrainingPaused)
-            yield return null;
-
-        bool requireOk = allow == TrainingAllow.Ok;
         _trainingAllowed = allow;
         _trainingFrozen = true;
         RefreshTrainingActions();
@@ -242,40 +266,7 @@ public partial class RoundController
         if (_trainingSilent)
             ShowTrainingOverlayOnly(findHighlight);
         else
-            ShowTrainingModal(LocalizationTables.Get(bodyKey), findHighlight, showOk: requireOk, showHitButtons: false);
-
-        if (!requireOk)
-        {
-            Phase before = _phase;
-            while (_phase == before || TrainingPaused)
-                yield return null;
-        }
-        else
-        {
-            bool done = false;
-            void OnOk()
-            {
-                if (!TrainingPaused)
-                    done = true;
-            }
-
-            if (_trainingOk != null)
-                _trainingOk.onClick.AddListener(OnOk);
-
-            while (!done || TrainingPaused)
-            {
-                if (Keyboard.current != null && Keyboard.current.enterKey.wasPressedThisFrame)
-                    OnOk();
-                yield return null;
-            }
-
-            if (_trainingOk != null)
-                _trainingOk.onClick.RemoveListener(OnOk);
-        }
-
-        _trainingFrozen = allow == TrainingAllow.Pull && !_trainingSilent;
-        _trainingAllowed = TrainingAllow.None;
-        HideTrainingModal();
+            ShowTrainingModal(bodyKey, findHighlight, showOk: false, showHitButtons: false);
     }
 
     private IEnumerator ShowTrainingHitModal(Action requestRetry)
@@ -284,7 +275,7 @@ public partial class RoundController
             yield return null;
 
         ShowTrainingModal(
-            LocalizationTables.Get(LocalizationTables.Keys.ModalHit),
+            LocalizationTables.Keys.ModalHit,
             null,
             showOk: false,
             showHitButtons: true);
@@ -345,8 +336,16 @@ public partial class RoundController
 
     private bool TrainingBlocksAction(TrainingAllow needed)
     {
-        return IsTraining && _trainingAllowed != needed;
+        if (!IsTraining)
+            return false;
+        if (needed == TrainingAllow.Fire)
+            return !TrainingFireAvailable;
+        return _trainingAllowed != needed;
     }
+
+    private bool TrainingFireAvailable => _phase == Phase.Aimed && !TrainingPaused
+        && (_trainingAllowed == TrainingAllow.Fire
+            || (_trainingAwaitingMiddle && !_trainingFrozen && _crossfireWasOverHitbox));
 
     private void RefreshTrainingActions()
     {
@@ -354,7 +353,7 @@ public partial class RoundController
         var allowed = TrainingPaused ? TrainingAllow.None : _trainingAllowed;
         SetTrainingAction(_drawActions, drawButton, allowed == TrainingAllow.Draw && _phase == Phase.BellShown, _phase == Phase.Drawn || aimed);
         SetTrainingAction(_pullActions, pullButton, allowed == TrainingAllow.Pull && _phase == Phase.Drawn, aimed);
-        SetTrainingAction(_fireActions, fireButton, allowed == TrainingAllow.Fire && aimed, pressed: false);
+        SetTrainingAction(_fireActions, fireButton, TrainingFireAvailable, pressed: false);
     }
 
     private void SetTrainingAction(List<TouchActionButton> actions, Button indicator, bool active, bool pressed)
@@ -372,13 +371,6 @@ public partial class RoundController
             return;
         _trainingAwaitingMiddle = false;
         // Keep phase Aimed; freeze aim by stopping loop caller.
-    }
-
-    private float TrainingTimeToMiddleOrRoll()
-    {
-        if (_trainingActive)
-            return 3f;
-        return RollTimeToMiddle();
     }
 
     private void EnsureTrainingUi()
@@ -438,36 +430,30 @@ public partial class RoundController
         RaiseMenuAndSoundAboveTraining(_trainingRoot.transform.parent);
     }
 
-    private void ShowTrainingModal(string body, Func<GameObject> findHighlight, bool showOk, bool showHitButtons)
+    private void ShowTrainingModal(string bodyKey, Func<GameObject> findHighlight, bool showOk, bool showHitButtons)
     {
         EnsureTrainingUi();
         if (_trainingRoot == null)
             return;
 
-        _trainingRoot.SetActive(true);
-        if (_trainingModal != null)
-            _trainingModal.SetActive(true);
-        if (_trainingBody != null)
-            _trainingBody.text = body;
+        _trainingBodyKey = bodyKey;
 
         if (_trainingOk != null)
         {
+            _trainingOk.interactable = !TrainingPaused;
             _trainingOk.gameObject.SetActive(showOk);
-            SetButtonLabel(_trainingOk, LocalizationTables.Keys.Ok);
         }
 
         if (_trainingRetry != null)
-        {
             _trainingRetry.gameObject.SetActive(showHitButtons);
-            SetButtonLabel(_trainingRetry, LocalizationTables.Keys.TrainingRetry);
-        }
 
         if (_trainingReady != null)
-        {
             _trainingReady.gameObject.SetActive(showHitButtons);
-            SetButtonLabel(_trainingReady, LocalizationTables.Keys.TrainingReady);
-        }
 
+        RefreshTrainingLocalizedText();
+        if (_trainingModal != null)
+            _trainingModal.SetActive(true);
+        _trainingRoot.SetActive(true);
         _findTrainingHighlight = findHighlight;
         RefreshTrainingShade();
         RaiseMenuAndSoundAboveTraining(_trainingRoot.transform.parent);
@@ -475,9 +461,19 @@ public partial class RoundController
 
     private void HideTrainingModal()
     {
+        _trainingBodyKey = null;
         _findTrainingHighlight = null;
         if (_trainingRoot != null)
             _trainingRoot.SetActive(false);
+    }
+
+    private void RefreshTrainingLocalizedText()
+    {
+        if (_trainingBody != null && !string.IsNullOrEmpty(_trainingBodyKey))
+            _trainingBody.text = LocalizationTables.Get(_trainingBodyKey);
+        SetButtonLabel(_trainingOk, LocalizationTables.Keys.Ok);
+        SetButtonLabel(_trainingRetry, LocalizationTables.Keys.TrainingRetry);
+        SetButtonLabel(_trainingReady, LocalizationTables.Keys.TrainingReady);
     }
 
     private void RefreshTrainingShade()

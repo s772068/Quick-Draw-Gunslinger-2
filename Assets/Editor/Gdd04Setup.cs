@@ -25,7 +25,6 @@ public static class Gdd04Setup
     private const string MenuBackVertPath = "Assets/Art/back_menu_vert.png";
     private const string MenuBackHorPath = "Assets/Art/back_menu_hor.png";
 
-    [MenuItem("QDG2/Apply GDD 0.4 Setup")]
     public static void ApplyFromMenu()
     {
         Apply();

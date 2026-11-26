@@ -31,7 +31,6 @@ public static class MainSceneBuilder
         };
     }
 
-    [MenuItem("QDG2/Build MainScene (GDD 0.1)")]
     public static void BuildFromMenu()
     {
         Build();

@@ -19,7 +19,6 @@ public static class Gdd05UiFonts
         "Assets/Scenes/GameScene.unity",
     };
 
-    [MenuItem("QDG2/Apply LiberationSans SDF UI Fonts")]
     public static void Apply()
     {
         var liberation = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(LiberationPath);

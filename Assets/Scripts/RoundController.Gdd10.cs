@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// GDD 1.0: city run, round config, new aim trajectory, hit marker, $ / stars.
+/// GDD 1.0: city run, round config, aim trajectory, $ / stars.
 /// </summary>
 public partial class RoundController
 {
@@ -21,7 +21,6 @@ public partial class RoundController
     private float _aimDistance;
     private RoundDefinition _activeRound;
     private LevelDefinition _activeLevel;
-    private Image _hitMarker;
     private Image _backgroundImage;
     private float _levelStartTime;
     private float _bellTime;
@@ -32,6 +31,8 @@ public partial class RoundController
     private string _roundBellPull = "";
     private string _roundPullHitbox = "";
     private string _roundTimeToMiddle = "";
+    private string _roundHitboxShot = "";
+    private string _roundShotResult;
     private readonly List<BalanceRow> _balanceRows = new List<BalanceRow>();
     private ILogHandler _yandexLogHandler;
     private int _restartCity;
@@ -44,7 +45,6 @@ public partial class RoundController
     private void BindGdd10()
     {
         EnsureLevelSystemPresent();
-        EnsureHitMarker();
         CacheBackground();
 
         int city = PlayerPrefs.GetInt(MainMenuController.SelectedCityPrefsKey, 0);
@@ -79,32 +79,6 @@ public partial class RoundController
             _backgroundImage = go.GetComponent<Image>();
     }
 
-    private void EnsureHitMarker()
-    {
-        if (_hitMarker != null || crossfire == null)
-            return;
-        Transform parent = crossfire.parent != null ? crossfire.parent : crossfire;
-        var existing = parent.Find("HitSprite");
-        if (existing != null && existing.TryGetComponent(out _hitMarker))
-        {
-            _hitMarker.sprite = shotFlashSprite;
-            _hitMarker.preserveAspect = true;
-            return;
-        }
-
-        var go = new GameObject("HitSprite", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        go.transform.SetParent(parent, false);
-        var rt = go.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(48f, 48f);
-        rt.anchoredPosition = Vector2.zero;
-        _hitMarker = go.GetComponent<Image>();
-        _hitMarker.sprite = shotFlashSprite;
-        _hitMarker.color = Color.white;
-        _hitMarker.preserveAspect = true;
-        _hitMarker.raycastTarget = false;
-        go.SetActive(false);
-    }
-
     private void ApplyRoundPresentation()
     {
         _activeLevel = LevelSystem.Instance != null
@@ -125,18 +99,12 @@ public partial class RoundController
             }
         }
 
-        _loggedBellToPull = false;
-        _hasHitboxEnter = false;
-        _roundBellPull = "";
-        _roundPullHitbox = "";
-        _roundTimeToMiddle = "";
         ClearDebugShots();
 
         if (_activeLevel != null)
             ApplyLevelBackground(_activeLevel.backgroundHorizontal, _activeLevel.backgroundVertical);
 
-        if (_hitMarker != null)
-            _hitMarker.gameObject.SetActive(false);
+        ResetTargetTiming();
         SyncHitMask();
         RefreshHitboxDebug();
     }
@@ -266,26 +234,50 @@ public partial class RoundController
     {
         if (!_hasHitboxEnter && hit)
             NoteTimingHitboxEntered();
-        string hitboxHit = "";
+        _roundHitboxShot = "";
+        _roundShotResult = hit ? "hit" : "miss";
         if (_hasHitboxEnter)
         {
             float seconds = Mathf.Max(0f, Time.time - _hitboxEnterTime);
-            hitboxHit = FormatSeconds(seconds);
-            string outcome = hit ? "hit" : "miss";
-            TimingDebugEvent("Hitbox → shot: " + hitboxHit + " с (" + outcome + ")");
+            _roundHitboxShot = FormatSeconds(seconds);
+            TimingDebugEvent("Hitbox → shot: " + _roundHitboxShot + " с (" + _roundShotResult + ")");
         }
+    }
 
-        if (!TimingDebugActive)
-            return;
-        _balanceRows.Add(new BalanceRow
+    private void ResetTargetTiming()
+    {
+        _loggedBellToPull = false;
+        _hasHitboxEnter = false;
+        _firstHitboxEnter = null;
+        _firstHitboxLeave = null;
+        _roundBellPull = "";
+        _roundPullHitbox = "";
+        _roundTimeToMiddle = "";
+        _roundHitboxShot = "";
+        _roundShotResult = null;
+        SetCrossfireOnTarget(false);
+    }
+
+    private void RecordBalanceRound(RoundOutcome outcome)
+    {
+        if (TimingDebugActive)
+            _balanceRows.Add(CreateBalanceRow(_roundShotResult ?? outcome.ToString()));
+    }
+
+    private BalanceRow CreateBalanceRow(string result)
+    {
+        return new BalanceRow
         {
             Round = _cityRun.RoundNumber,
             BellPull = _roundBellPull,
             PullHitbox = _roundPullHitbox,
-            HitboxHit = hitboxHit,
+            HitboxHit = _roundHitboxShot,
+            HitboxDuration = _firstHitboxLeave.HasValue && _firstHitboxEnter.HasValue
+                ? FormatSeconds(_firstHitboxLeave.Value - _firstHitboxEnter.Value)
+                : "",
             TimeToMiddle = _roundTimeToMiddle,
-            Result = hit ? "hit" : "miss"
-        });
+            Result = result
+        };
     }
 
     private static string FormatSeconds(float seconds)
@@ -317,6 +309,9 @@ public partial class RoundController
 
         try
         {
+            if (_firstHitboxLeave.HasValue && (_phase == Phase.Aimed
+                || _phase == Phase.AimedAfterMiss || _phase == Phase.MissRecovery))
+                _balanceRows.Add(CreateBalanceRow(_roundShotResult ?? ""));
             WriteBalanceCsv();
         }
         finally
@@ -343,11 +338,11 @@ public partial class RoundController
 
     private void WriteBalanceCsv()
     {
-        string dir = @"d:\00_Active_Projects\GitReps\Quick Draw Gunslinger 2\Docs\balance_log";
+        string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs", "balance_log"));
         Directory.CreateDirectory(dir);
         string path = Path.Combine(dir, "balance_" + DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture) + ".csv");
         var sb = new StringBuilder();
-        sb.AppendLine("round,timetomiddle,bell-pull,pull-hitbox,hitbox-hit,result");
+        sb.AppendLine("round,timetomiddle,bell-pull,pull-hitbox,hitbox-hit,result,hitbox-enter-leave");
         for (int i = 0; i < _balanceRows.Count; i++)
         {
             BalanceRow row = _balanceRows[i];
@@ -362,6 +357,8 @@ public partial class RoundController
             sb.Append(row.HitboxHit);
             sb.Append(',');
             sb.Append(row.Result);
+            sb.Append(',');
+            sb.Append(row.HitboxDuration);
             sb.AppendLine();
         }
 
@@ -376,6 +373,7 @@ public partial class RoundController
         public string BellPull;
         public string PullHitbox;
         public string HitboxHit;
+        public string HitboxDuration;
         public string TimeToMiddle;
         public string Result;
     }
@@ -428,13 +426,6 @@ public partial class RoundController
                   + " с (" + outcome + ")");
     }
 
-    private void LogCrossfireEnteredHitbox()
-    {
-        DebugEvent("Прицел над хитбоксом: "
-                  + FactTimeFromBell().ToString("0.000", CultureInfo.InvariantCulture)
-                  + " с от Bell");
-    }
-
     private float FactTimeFromPull()
     {
         if (_pullTime <= 0f)
@@ -477,8 +468,8 @@ public partial class RoundController
     {
         if (roundStartPanel == null)
             return;
-        string city = _activeLevel != null ? _activeLevel.LocalizedName : ("City " + (_cityRun.CityIndex + 1));
-        string enemy = _activeRound != null ? _activeRound.LocalizedEnemyName : ("Round " + _cityRun.RoundNumber);
+        string city = _activeLevel != null ? _activeLevel.LocalizedName : LocalizationTables.Get("city_" + LevelSystem.CityBoardId(_cityRun.CityIndex));
+        string enemy = _activeRound != null ? _activeRound.LocalizedEnemyName : LocalizationTables.Get("enemy");
         SetChildText(roundStartPanel, "TitleLine/CityName", city);
         SetChildText(roundStartPanel, "CityName", city);
         SetChildText(roundStartPanel, "RoundLabel", _cityRun.RoundNumber + " / 5");
@@ -486,7 +477,7 @@ public partial class RoundController
         SetChildText(roundStartPanel, "EnemyName", numberedEnemy);
         SetChildText(roundStartPanel, "EnemyLine/EnemyName", numberedEnemy);
         SetChildText(roundStartPanel, "Best/BestValue", "$" + CityProgress.GetBestDollars(_cityRun.CityIndex));
-        SetChildText(roundStartPanel, "RunDollars", "Your gain if you leave now");
+        SetChildText(roundStartPanel, "RunDollars", LocalizationTables.Get("gain_if_leave"));
         SetChildText(roundStartPanel, "RunDollarsValue", "$" + _cityRun.RunDollars);
     }
 
@@ -549,14 +540,13 @@ public partial class RoundController
         StopCrossfireRoutine();
         NotePullTime();
         _hasHitboxEnter = false;
-        _crossfireWasOverHitbox = false;
         if (!_loggedBellToPull)
         {
             _loggedBellToPull = true;
             LogBellToPull();
         }
 
-        float timeToMiddle = TrainingTimeToMiddleOrRoll();
+        float timeToMiddle = RollTimeToMiddle();
         _roundTimeToMiddle = FormatSeconds(timeToMiddle);
         if (TimingDebugActive)
             TimingDebugEvent("TimeToMiddle: " + _roundTimeToMiddle + " с");
@@ -571,7 +561,7 @@ public partial class RoundController
             if (crossfire.parent != null)
                 crossfire.position = world;
             else
-                SetCrossfireLocalPosition(_aimPath.Start);
+                crossfire.localPosition = _aimPath.Start;
             NoteCrossfireOverHitbox();
         }
 
@@ -635,15 +625,6 @@ public partial class RoundController
         _crossfireRoutine = null;
     }
 
-    private void ShowHitMarkerAtCrossfire()
-    {
-        EnsureHitMarker();
-        if (_hitMarker == null || crossfire == null)
-            return;
-        _hitMarker.gameObject.SetActive(true);
-        _hitMarker.rectTransform.position = crossfire.position;
-        _hitMarker.transform.SetAsLastSibling();
-    }
 
     private void PresentRoundWinGdd10()
     {
@@ -661,13 +642,13 @@ public partial class RoundController
         {
             int nextNumber = _cityRun.RoundNumber + 1;
             var next = _activeLevel?.GetRound(nextNumber);
-            string nextName = next != null ? next.LocalizedEnemyName : "Enemy";
+            string nextName = next != null ? next.LocalizedEnemyName : LocalizationTables.Get("enemy");
             SetChildText(roundWinPanel, "NextEnemyLine/EnemyName", $"{nextName} ({nextNumber} / 5)");
         }
 
-        string defeated = _activeRound != null ? _activeRound.LocalizedEnemyName : "Enemy";
-        SetChildText(roundWinPanel, "TitleLine/WinLoseTitle", defeated + " Defeated");
-        SetChildText(roundWinPanel, "ResultRoundLine/Text", "Bounty for\n" + defeated);
+        string defeated = _activeRound != null ? _activeRound.LocalizedEnemyName : LocalizationTables.Get("enemy");
+        SetChildText(roundWinPanel, "TitleLine/WinLoseTitle", LocalizationTables.Format("enemy_defeated", defeated));
+        SetChildText(roundWinPanel, "ResultRoundLine/Text", LocalizationTables.Format("bounty_for", defeated));
         SetChildText(roundWinPanel, "ResultRoundLine/Value", "$" + _cityRun.LastRoundDollars);
 
         SetPanelActive(roundWinPanel, true);
@@ -678,7 +659,7 @@ public partial class RoundController
         SetChildText(roundWinPanel, "RoundDollars", "$" + _cityRun.LastRoundDollars);
         SetChildText(roundWinPanel, "RunDollars", "$" + _cityRun.RunDollars);
         SetChildText(roundWinPanel, "StarsLine/ResultText/Value", "$" + _cityRun.RunDollars);
-        string factTime = _cityRun.LastFactTime.ToString("0.00", CultureInfo.InvariantCulture) + "s";
+        string factTime = LocalizationTables.Format("seconds_short", _cityRun.LastFactTime.ToString("0.00", CultureInfo.InvariantCulture));
         SetChildText(roundWinPanel, "FactTime", factTime);
         SetChildText(roundWinPanel, "TimeLine/ResultText", factTime);
         SceneTextLocalizer.Apply();
@@ -687,9 +668,9 @@ public partial class RoundController
 
     private void PresentRoundLoseGdd10()
     {
-        string enemy = _activeRound != null ? _activeRound.LocalizedEnemyName : "The opponent";
-        SetChildText(roundLosePanel, "TitleLine/WinLoseTitle", enemy + " Defeated You");
-        SetChildText(roundLosePanel, "StarsLine/ResultText", $"You lost ${_cityRun.RunDollars}");
+        string enemy = _activeRound != null ? _activeRound.LocalizedEnemyName : LocalizationTables.Get("enemy");
+        SetChildText(roundLosePanel, "TitleLine/WinLoseTitle", LocalizationTables.Format("enemy_defeated_you", enemy));
+        SetChildText(roundLosePanel, "StarsLine/ResultText", LocalizationTables.Format("you_lost", _cityRun.RunDollars));
         _cityRun.Clear();
         SetPanelActive(roundLosePanel, true);
         if (roundLosePanel != null)
@@ -717,9 +698,9 @@ public partial class RoundController
         if (levelCompletePanel != null)
             levelCompletePanel.transform.SetAsLastSibling();
 
-        string city = _activeLevel != null ? _activeLevel.LocalizedName : "City";
+        string city = _activeLevel != null ? _activeLevel.LocalizedName : LocalizationTables.Get("city");
         SetChildText(levelCompletePanel, "CityName", city);
-        SetChildText(levelCompletePanel, "TitleLine/CityNameComplete", city + " Complete!");
+        SetChildText(levelCompletePanel, "TitleLine/CityNameComplete", LocalizationTables.Format("city_complete", city));
         SetChildText(levelCompletePanel, "TotalDollars", "$" + _cityRun.RunDollars);
         SetChildText(levelCompletePanel, "StarsLine/ResultText/Value", "$" + _cityRun.RunDollars);
         SetChildText(levelCompletePanel, "EarningsLine/Value", "$" + _cityRun.RunDollars);
@@ -728,20 +709,97 @@ public partial class RoundController
             starsIcon.sprite = cityResultStars[stars];
         int bestStored = CityProgress.GetBestDollars(_cityRun.CityIndex);
         SetChildText(levelCompletePanel, "RecordLabel",
-            isNew ? "New Record" : ("Best: $" + bestStored));
+            isNew ? LocalizationTables.Get("new_record") : LocalizationTables.Format("best_amount", bestStored));
 
-        bool needNick = !PlayerIdentity.HasNickname;
+        bool needNick = HttpLeaderboards.SupportsScoreSubmission && !PlayerIdentity.HasNickname;
         PrepareNicknameUi(needNick);
+        ShowCompletionLeaderboard();
 
         bool nextOpen = CityProgress.IsUnlocked(_cityRun.CityIndex + 1);
         SetChildActive(levelCompletePanel, "ControlBtns/ToNextBtn", nextOpen);
         SetChildActive(levelCompletePanel, "NextCity", nextOpen);
 
-        if (!needNick)
+        if (HttpLeaderboards.SupportsScoreSubmission && !needNick)
             HttpLeaderboards.Instance?.FlushPending();
 
         SceneTextLocalizer.Apply();
         RefreshMenuButtonInteractable();
+    }
+
+    private string _completionBoard;
+    private bool _completionDeliveryFailed;
+
+    private void BindCompletionLeaderboardButton()
+    {
+        var icon = levelCompletePanel?.transform.Find("RecordedPanel/LeaderboardIcon")?.GetComponent<Image>();
+        if (icon == null)
+            return;
+
+        var button = icon.GetComponent<Button>();
+        if (button == null)
+            button = icon.gameObject.AddComponent<Button>();
+        button.targetGraphic = icon;
+        button.onClick.AddListener(OpenCompletionLeaderboard);
+    }
+
+    private void OpenCompletionLeaderboard()
+    {
+        if (string.IsNullOrEmpty(_completionBoard) || !IsPanelShowing(levelCompletePanel))
+            return;
+
+        WorldMapPreview.CityLeaderboardOnLoad = _cityRun.CityIndex;
+        OnPauseExitClicked();
+    }
+
+    private void ShowCompletionLeaderboard()
+    {
+        _completionBoard = LevelSystem.CityBoardId(_cityRun.CityIndex);
+        _completionDeliveryFailed = false;
+        SetChildActive(levelCompletePanel, "RecordedPanel", true);
+        RefreshCompletionLeaderboard();
+        LeaderboardCache.Refresh(_completionBoard);
+    }
+
+    private void OnCompletionBoardChanged(string board)
+    {
+        if (board == _completionBoard)
+            RefreshCompletionLeaderboard();
+    }
+
+    private void OnCompletionDeliveryCompleted(string board, bool success)
+    {
+        if (board != _completionBoard)
+            return;
+
+        _completionDeliveryFailed = !success;
+        RefreshCompletionLeaderboard();
+    }
+
+    private void RefreshCompletionLeaderboard()
+    {
+        if (string.IsNullOrEmpty(_completionBoard) || !IsPanelShowing(levelCompletePanel))
+            return;
+
+        bool hasPage = LeaderboardCache.TryGet(_completionBoard, out var page);
+        int rank = hasPage && page.Ok ? page.UserRank : 0;
+        SetChildText(levelCompletePanel, "RecordedPanel/Text", rank > 0
+            ? LocalizationTables.Format("rank_number", rank)
+            : LocalizationTables.Get("rank_missing"));
+
+        if (HttpLeaderboards.SupportsScoreSubmission && !PlayerIdentity.HasNickname)
+            return;
+
+        bool pending = HttpLeaderboards.HasPendingRecord(_completionBoard);
+        string status = !HttpLeaderboards.SupportsScoreSubmission
+            ? LocalizationTables.Get("local_result")
+            : pending
+            ? (_completionDeliveryFailed
+                ? LocalizationTables.Get("submission_retry")
+                : LocalizationTables.Get("submitting_score"))
+            : (rank > 0 ? LocalizationTables.Get("score_on_leaderboard") : string.Empty);
+        SetChildText(levelCompletePanel, "SubmitLine/Nickname", status);
+        SetChildActive(levelCompletePanel, "SubmitLine", status.Length > 0);
+        SetChildActive(levelCompletePanel, "SubmitLine/Nickname", status.Length > 0);
     }
 
     private void OnNextRoundGdd10()

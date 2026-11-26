@@ -93,7 +93,7 @@ public class YandexGamesSdk : MonoBehaviour
     {
         float wait = 0f;
         const float timeout = 10f;
-        while (!LeaderboardCache.IsReady && wait < timeout)
+        while ((!LeaderboardCache.IsReady || !LocalizationTables.IsReady) && wait < timeout)
         {
             wait += Time.unscaledDeltaTime;
             yield return null;
@@ -150,6 +150,7 @@ public class YandexGamesSdk : MonoBehaviour
     {
         if (Instance == null)
             return;
+        Instance._resumeGameplayAfterPlatformPause = false;
         Instance.InternalGameplayStop();
     }
 
@@ -246,7 +247,10 @@ public class YandexGamesSdk : MonoBehaviour
     private void InternalGameplayStart()
     {
         if (PlatformPaused)
+        {
+            _resumeGameplayAfterPlatformPause = true;
             return;
+        }
         if (_gameplayActive)
             return;
         _gameplayActive = true;
@@ -295,17 +299,18 @@ public class YandexGamesSdk : MonoBehaviour
             return;
 
         PlatformPaused = false;
+        bool resumeGameplay = _resumeGameplayAfterPlatformPause;
+        _resumeGameplayAfterPlatformPause = false;
         GameAudioSettings.SetPlatformMuted(false);
 
         if (!GamePauseGate.IsUserPaused)
         {
             Time.timeScale = 1f;
             AudioListener.pause = false;
-            if (_resumeGameplayAfterPlatformPause)
+            if (resumeGameplay)
                 InternalGameplayStart();
         }
 
-        _resumeGameplayAfterPlatformPause = false;
         PlatformPausedChanged?.Invoke();
     }
 }

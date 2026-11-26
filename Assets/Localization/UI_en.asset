@@ -155,7 +155,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 674226204
-    m_Localized: Enemy Miss
+    m_Localized: The opponent missed!
     m_Metadata:
       m_Items: []
   - m_Id: 674226210
@@ -191,7 +191,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 17720766727446534
-    m_Localized: Shoot
+    m_Localized: Shoot!
     m_Metadata:
       m_Items: []
   - m_Id: 17720766727446535
@@ -208,6 +208,182 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 17720766727446538
     m_Localized: OK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446539
+    m_Localized: "PLAY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446540
+    m_Localized: "LOCKED"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446541
+    m_Localized: "Start"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446542
+    m_Localized: "Explored Towns"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446543
+    m_Localized: "NET WORTH LEADERBOARD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446544
+    m_Localized: "PLAYER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446545
+    m_Localized: "Loading\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446546
+    m_Localized: "Leaderboard unavailable"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446547
+    m_Localized: "You"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446548
+    m_Localized: "Pause"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446549
+    m_Localized: "Abort run?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446550
+    m_Localized: "You will lose ${0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446551
+    m_Localized: "Top-1 result for this town"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446552
+    m_Localized: "First Bounty Target:"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446553
+    m_Localized: "Next Bounty Target:"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446554
+    m_Localized: "Town secured"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446555
+    m_Localized: "Total Earnings for This Town"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446556
+    m_Localized: "Your gain if you leave now"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446557
+    m_Localized: "Opponent"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446558
+    m_Localized: "Town"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446559
+    m_Localized: "{0} Defeated"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446560
+    m_Localized: "{0} Defeated You"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446561
+    m_Localized: "Bounty for\n{0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446562
+    m_Localized: "You lost ${0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446563
+    m_Localized: "{0} Complete!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446564
+    m_Localized: "New Record"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446565
+    m_Localized: "Best: ${0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446566
+    m_Localized: "You ranked #{0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446567
+    m_Localized: "Rank: \u2014"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446568
+    m_Localized: "Local result (Editor)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446569
+    m_Localized: "Submission will retry"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446570
+    m_Localized: "Submitting score\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446571
+    m_Localized: "Score on leaderboard"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446572
+    m_Localized: "{0}s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446573
+    m_Localized: "Enemy Shot delay"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446574
+    m_Localized: "Dry Creek"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446575
+    m_Localized: "Dead Well"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446576
+    m_Localized: "Raven Rock"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446577
+    m_Localized: "Bungler"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446578
+    m_Localized: "Cowboy"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446579
+    m_Localized: "Deputy"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446580
+    m_Localized: "Sheriff"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446581
+    m_Localized: "Gunslinger"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17720766727446582
+    m_Localized: "Enemy reaction time:\n{0}"
     m_Metadata:
       m_Items: []
   references:

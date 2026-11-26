@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
+using UnityEngine.Localization.Tables;
 
 /// <summary>
 /// GDD 0.5 facade over Unity Localization String Tables (collection "UI").
@@ -69,6 +71,8 @@ public static class LocalizationTables
     private static bool _ready;
     private static bool _sdkLocaleApplied;
     private static bool _applyingLocale;
+    private static readonly Dictionary<string, string> English = new();
+    private static readonly Dictionary<string, string> Russian = new();
 
     public static string Language => _language;
     public static bool IsRussian => string.Equals(_language, "ru", StringComparison.OrdinalIgnoreCase);
@@ -114,35 +118,24 @@ public static class LocalizationTables
 #endif
     }
 
-    public static string MapSdkLanguage(string sdkLang) => DefaultLanguage;
+    public static string MapSdkLanguage(string sdkLang)
+    {
+        string language = sdkLang?.Trim().Split('-', '_')[0];
+        return string.Equals(language, "ru", StringComparison.OrdinalIgnoreCase) ? "ru" : DefaultLanguage;
+    }
 
-    public static string Get(string key)
+    public static string Format(string key, params object[] args) => string.Format(Get(key), args);
+
+    public static string Get(string key, string fallback = null)
     {
         if (string.IsNullOrEmpty(key))
             return string.Empty;
 
-        SyncLanguageFromSelectedLocale();
-
-        try
-        {
-            if (LocalizationSettings.InitializationOperation.IsDone)
-            {
-                Locale english = LocalizationSettings.AvailableLocales.GetLocale(DefaultLanguage);
-                if (english == null)
-                    return GetEmbedded(key);
-
-                string value = LocalizationSettings.StringDatabase.GetLocalizedString(TableName, key, english);
-                if (!string.IsNullOrEmpty(value) &&
-                    !value.StartsWith("No translation found", StringComparison.Ordinal))
-                    return value;
-            }
-        }
-        catch (Exception)
-        {
-            // Tables / SelectedLocale not ready yet.
-        }
-
-        return GetEmbedded(key);
+        if (IsRussian && Russian.TryGetValue(key, out string russian))
+            return russian;
+        if (English.TryGetValue(key, out string english))
+            return english;
+        return fallback ?? GetEmbedded(key);
     }
 
     internal static void MarkReady()
@@ -152,14 +145,14 @@ public static class LocalizationTables
 
     internal static void ApplyLocaleCode(string code, bool invokeEvent)
     {
-        string mapped = DefaultLanguage;
+        string mapped = MapSdkLanguage(code);
         _language = mapped;
 
         try
         {
             if (!LocalizationSettings.InitializationOperation.IsDone)
             {
-                if (invokeEvent)
+                if (invokeEvent && _ready)
                     LanguageChanged?.Invoke();
                 return;
             }
@@ -167,7 +160,7 @@ public static class LocalizationTables
             var available = LocalizationSettings.AvailableLocales;
             if (available == null || available.Locales == null || available.Locales.Count == 0)
             {
-                if (invokeEvent)
+                if (invokeEvent && _ready)
                     LanguageChanged?.Invoke();
                 return;
             }
@@ -198,7 +191,7 @@ public static class LocalizationTables
             Debug.LogWarning("LocalizationTables locale apply failed: " + e.Message);
         }
 
-        if (invokeEvent)
+        if (invokeEvent && _ready)
             LanguageChanged?.Invoke();
     }
 
@@ -302,7 +295,7 @@ public static class LocalizationTables
             case Keys.YourRecord:
                 return ru ? "Ваш рекорд: {0}" : "Your record: {0}";
             case Keys.EnemyMiss:
-                return ru ? "Противник промахнулся!" : "Enemy Miss";
+                return ru ? "Противник промахнулся!" : "The opponent missed!";
             case Keys.NicknamePlaceholder:
                 return ru ? "Ник (2–16)" : "Nickname (2–16)";
             case Keys.SubmitScore:
@@ -326,7 +319,7 @@ public static class LocalizationTables
                     ? "Жди, пока прицел наведётся на противника"
                     : "Wait until the sight lines up on the enemy";
             case Keys.ModalFire:
-                return ru ? "Стреляй" : "Shoot";
+                return ru ? "Стреляй!" : "Shoot!";
             case Keys.ModalHit:
                 return ru
                     ? "Ты поразил противника. Ты закончил обучение, но помни: в реальной дуэли всё это нужно сделать до того, как выстрелит противник!"
@@ -353,9 +346,6 @@ public static class LocalizationTables
         {
             yield return LocalizationSettings.InitializationOperation;
 
-            LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
-            LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
-
 #if UNITY_EDITOR
             // Game View locale dropdown is the source of truth in the Editor.
             SyncLanguageFromSelectedLocale();
@@ -373,8 +363,39 @@ public static class LocalizationTables
             }
 #endif
 
+            yield return LoadStrings("en", English);
+            yield return LoadStrings("ru", Russian);
+
+            LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+            LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
             MarkReady();
             LanguageChanged?.Invoke();
+        }
+
+        private static IEnumerator LoadStrings(string code, Dictionary<string, string> strings)
+        {
+            Locale locale = LocalizationSettings.AvailableLocales?.GetLocale(code);
+            if (locale == null)
+                yield break;
+
+            var operation = LocalizationSettings.StringDatabase.GetTableAsync(TableName, locale);
+            yield return operation;
+            if (!operation.IsValid())
+                yield break;
+
+            // Changing the selected locale releases the database's table handles.
+            // Keep the translations as plain strings for the lifetime of the game.
+            StringTable table = operation.Result;
+            if (table == null || table.SharedData == null)
+                yield break;
+
+            strings.Clear();
+            foreach (var key in table.SharedData.Entries)
+            {
+                string value = table.GetEntry(key.Id)?.Value;
+                if (!string.IsNullOrEmpty(value))
+                    strings[key.Key] = value;
+            }
         }
 
         private void OnDestroy()

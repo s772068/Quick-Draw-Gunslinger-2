@@ -9,7 +9,6 @@ using UnityEngine.UI;
 /// </summary>
 public static class Gdd10SceneSetup
 {
-    [MenuItem("QDG2/Apply GDD 1.0 Scene Objects")]
     public static void ApplyLoadedScenes()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -19,7 +18,6 @@ public static class Gdd10SceneSetup
             ApplyScene(SceneManager.GetSceneAt(i));
     }
 
-    [MenuItem("QDG2/Apply GDD 1.0 To Project Scenes")]
     public static void ApplyProjectScenes()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -38,7 +36,6 @@ public static class Gdd10SceneSetup
         }
     }
 
-    [MenuItem("QDG2/Rebuild GDD 1.0 Generated Panels")]
     public static void RebuildGeneratedPanels()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode)

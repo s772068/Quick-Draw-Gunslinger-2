@@ -21,7 +21,7 @@ public static class SceneTextLocalizer
             if (string.IsNullOrEmpty(key))
                 continue;
 
-            label.text = LocalizationTables.Get(key);
+            label.text = LocalizationTables.Get(key, LocalizationTables.IsReady ? null : label.text);
         }
     }
 
@@ -40,8 +40,21 @@ public static class SceneTextLocalizer
         if (t.name == "Hint")
             return null;
 
+        if (t.name == "Title" && HasAncestor(t, "PauseMenu"))
+            return "pause";
+        if (t.name == "PauseTitle" || t.name == "TitlePause")
+            return HasAncestor(t, "ModalAreYouSureAbort") ? "abort_run" : "pause";
+        if (t.name == "NextEnemy")
+            return HasAncestor(t, "ModalLevelStartPanel") ? "first_target" : "next_target";
+        if (t.name == "Text" && t.parent?.name == "EarningsLine")
+            return "town_earnings";
+        if (t.name == "Placeholder" && t.parent?.name == "InputNickname")
+            return LocalizationTables.Keys.NicknamePlaceholder;
+
         if (t.name == "Title" && HasAncestor(t, "WorldMap"))
             return LocalizationTables.Keys.Towns;
+        if (t.name == "Title" && t.parent?.name == "Top panel" && HasAncestor(t, "World map"))
+            return "explored_towns";
 
         switch (t.name)
         {
@@ -94,6 +107,13 @@ public static class SceneTextLocalizer
         switch (name)
         {
             case "StartBtn": return LocalizationTables.Keys.StartSeries;
+            case "Start label": return "menu_start";
+            case "Game title": return LocalizationTables.Keys.GameTitle;
+            case "Player column heading": return "player_heading";
+            case "BestText": return "town_top_result";
+            case "SecuredText": return "town_secured";
+            case "SubmitBtn": return LocalizationTables.Keys.SubmitScore;
+            case "EnemyShotDelay_Debug": return "enemy_shot_delay";
             case "Begin": return LocalizationTables.Keys.MenuBegin;
             case "Training": return LocalizationTables.Keys.MenuTraining;
             case "Ok": return LocalizationTables.Keys.Ok;

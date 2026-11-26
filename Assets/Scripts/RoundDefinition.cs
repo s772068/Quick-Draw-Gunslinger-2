@@ -25,5 +25,5 @@ public class RoundDefinition : MonoBehaviour
     }
 
     public string LocalizedEnemyName =>
-        LocalizationTables.Language == "ru" ? enemyNameRu : enemyNameEn;
+        LocalizationTables.Get("enemy_" + enemyId, LocalizationTables.IsRussian ? enemyNameRu : enemyNameEn);
 }

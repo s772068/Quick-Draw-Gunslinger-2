@@ -17,7 +17,8 @@ public partial class RoundController : MonoBehaviour
     {
         Inactive = 0,
         Active = 1,
-        Pressed = 2
+        Pressed = 2,
+        WaitingForBell = 3
     }
 
     [System.Serializable]
@@ -89,6 +90,7 @@ public partial class RoundController : MonoBehaviour
 
     [Header("Gun")]
     [SerializeField] private GunDefinition gun;
+    [SerializeField] private GunDefinition trainingGun;
 
     [Header("Balance / Timing")]
     [Tooltip("Enemy first-shot K floor: K = floor + span * decay^(round-1). Round 1 → 2.0s.")]
@@ -121,6 +123,7 @@ public partial class RoundController : MonoBehaviour
 
     [Header("Audio")]
     [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip buttonClick;
     [SerializeField] private AudioClip sfxEagle;
     [SerializeField] private AudioClip sfxBell;
     [SerializeField] private AudioClip sfxDraw;
@@ -193,6 +196,9 @@ public partial class RoundController : MonoBehaviour
     {
         get
         {
+            if (IsTraining && trainingGun != null)
+                return trainingGun;
+
             if (gun == null)
                 gun = FindFirstObjectByType<GunDefinition>();
             return gun;
@@ -214,8 +220,8 @@ public partial class RoundController : MonoBehaviour
 
     private void Awake()
     {
-        Time.timeScale = 1f;
-        AudioListener.pause = false;
+        Time.timeScale = YandexGamesSdk.PlatformPaused ? 0f : 1f;
+        AudioListener.pause = YandexGamesSdk.PlatformPaused;
         GameAudioSettings.ApplyListenerVolume();
 
         AutoBindSceneRefs();
@@ -264,20 +270,25 @@ public partial class RoundController : MonoBehaviour
         BindGdd08Ui();
         BindGdd10();
         BindGdd12Training();
+        CaptureDuelLayout();
+        PlatformGameplay.Stop();
         EnterWaitingToStart();
-        YandexGamesSdk.GameplayStop();
     }
 
     private void OnEnable()
     {
         LocalizationTables.LanguageChanged += ApplyLocalizedTexts;
         YandexGamesSdk.PlatformPausedChanged += OnPlatformPauseChanged;
+        LeaderboardCache.BoardChanged += OnCompletionBoardChanged;
+        HttpLeaderboards.DeliveryCompleted += OnCompletionDeliveryCompleted;
     }
 
     private void OnDisable()
     {
         LocalizationTables.LanguageChanged -= ApplyLocalizedTexts;
         YandexGamesSdk.PlatformPausedChanged -= OnPlatformPauseChanged;
+        LeaderboardCache.BoardChanged -= OnCompletionBoardChanged;
+        HttpLeaderboards.DeliveryCompleted -= OnCompletionDeliveryCompleted;
         GamePauseGate.IsUserPaused = false;
 #if UNITY_EDITOR
         if (_timingDebugEnabled)
@@ -290,12 +301,34 @@ public partial class RoundController : MonoBehaviour
 
     private void Start()
     {
+        BindUiButtonAudio();
         // After OrientationBackground.Start, so the level art wins the first frame.
         ApplyRoundPresentation();
         if (IsTraining)
             ApplyTrainingLevelPresentation();
         // GDD: eagle SFX on GameScene load, not on round Start.
         PlaySfx(sfxEagle);
+    }
+
+    private void BindUiButtonAudio()
+    {
+        if (buttonClick == null)
+            return;
+
+        buttonClick.LoadAudioData();
+        var duelButtons = new HashSet<Button> { drawButton, pullButton, fireButton };
+        foreach (var action in _drawActions)
+            duelButtons.Add(action.button);
+        foreach (var action in _pullActions)
+            duelButtons.Add(action.button);
+        foreach (var action in _fireActions)
+            duelButtons.Add(action.button);
+
+        foreach (var button in FindObjectsByType<Button>(FindObjectsInactive.Include))
+        {
+            if (button.gameObject.scene == gameObject.scene && button.enabled && !duelButtons.Contains(button))
+                button.onClick.AddListener(() => GameAudioSettings.PlayButtonClick(buttonClick));
+        }
     }
 
     private void Update()
@@ -367,22 +400,12 @@ public partial class RoundController : MonoBehaviour
 
     private void OnPlatformPauseChanged()
     {
-        // Platform pause freezes input via Update gate; menu state stays as-is.
-        if (YandexGamesSdk.PlatformPaused)
-        {
-            if (ShouldOpenPauseMenuOnPlatformPause())
-                OpenPauseMenu();
-            else
-                SetGameplayHudInteractable(false);
-        }
-        else if (!_paused)
-        {
-            // Ads call SetGameplayHudInteractable(false) while RoundFinish/Summary are open;
-            // Reassert alone only restores D/P/F — re-enable panel buttons too.
-            SetGameplayHudInteractable(true);
+        // The SDK resumes its own pause. Only player input opens the pause menu on Yandex.
+        bool interactable = !_paused && !YandexGamesSdk.PlatformPaused;
+        SetGameplayHudInteractable(interactable);
+        if (interactable)
             ReassertActionInteractable();
-            RefreshMenuButtonInteractable();
-        }
+        RefreshMenuButtonInteractable();
     }
 
     private void ApplyLocalizedTexts()
@@ -398,6 +421,8 @@ public partial class RoundController : MonoBehaviour
         RefreshOutcomeTexts();
         RefreshRoundStartLabels();
         RefreshCounters();
+        RefreshCompletionLeaderboard();
+        RefreshTrainingLocalizedText();
     }
 
     private static void SetButtonLabel(Button button, string key)
@@ -694,8 +719,9 @@ public partial class RoundController : MonoBehaviour
         if (hud == null)
             return;
 
-        if (hud.GetComponent<SafeAreaPadding>() == null)
-            hud.gameObject.AddComponent<SafeAreaPadding>();
+        _safeAreaPadding = hud.GetComponent<SafeAreaPadding>();
+        if (_safeAreaPadding == null)
+            _safeAreaPadding = hud.gameObject.AddComponent<SafeAreaPadding>();
     }
 
     private void EnsureGunAim()
@@ -859,6 +885,7 @@ public partial class RoundController : MonoBehaviour
 
     private void LateUpdate()
     {
+        ApplyDuelLayout();
         RefreshTrainingShade();
         if (aimDimOverlay != null && aimDimOverlay.gameObject.activeInHierarchy)
             UpdateAimDimHole();
@@ -882,6 +909,7 @@ public partial class RoundController : MonoBehaviour
             _aimDimMaterial = null;
         }
 
+        ReleaseTargetOutline();
         ReleaseHitMask();
 #if UNITY_EDITOR
         ReleaseHitboxDebugSprite();
@@ -908,8 +936,8 @@ public partial class RoundController : MonoBehaviour
             radius = Mathf.Max(crossfire.rect.width, crossfire.rect.height) * 0.45f;
 
         _aimDimMaterial.SetVector(HoleCenterId, new Vector4(localPoint.x, localPoint.y, 0f, 0f));
-        _aimDimMaterial.SetFloat(HoleRadiusId, radius);
-        _aimDimMaterial.SetFloat(HoleSoftnessId, Mathf.Max(0f, aimDimHoleSoftness));
+        _aimDimMaterial.SetFloat(HoleRadiusId, radius * _duelLayoutScale);
+        _aimDimMaterial.SetFloat(HoleSoftnessId, Mathf.Max(0f, aimDimHoleSoftness) * _duelLayoutScale);
     }
 
     private static void PlaceAimDimUnderCrossfire(Transform parent, Transform crossfireBlock)
@@ -1042,6 +1070,7 @@ public partial class RoundController : MonoBehaviour
         StopCrossfireRoutine();
         StopEnemyRoutine();
         StopGunFxRoutine();
+        HideGunFlash();
 
         SetPanelActive(roundStartPanel, _cityRun.RoundNumber == 1 && !IsTraining);
         SetPanelActive(roundFinishPanel, false);
@@ -1076,7 +1105,6 @@ public partial class RoundController : MonoBehaviour
         RefreshHudCounters();
         RefreshMenuButtonInteractable();
         CaptureRestartSnapshot();
-        _crossfireWasOverHitbox = false;
 
         if (IsTraining)
         {
@@ -1103,11 +1131,10 @@ public partial class RoundController : MonoBehaviour
         }
         SetPanelActive(roundStartPanel, false);
         _phase = Phase.WaitingForBell;
-        SetActionState(_drawActions, ActionVisualState.Active);
-        SetIndicatorVisual(drawButton, ActionVisualState.Active);
+        SetActionState(_drawActions, ActionVisualState.WaitingForBell);
         ClearEnemyShotDelayDebug();
         RefreshMenuButtonInteractable();
-        YandexGamesSdk.GameplayStart();
+        PlatformGameplay.Start();
         NoteLevelStartTime();
         LogRoundOpponent();
         _bellRoutine = StartCoroutine(BellCountdown());
@@ -1132,6 +1159,8 @@ public partial class RoundController : MonoBehaviour
         // Kick audio first, then flip the icon so they stay aligned on slow WebGL.
         PlaySfx(sfxBell);
         SetBellState(fired: true);
+        SetActionState(_drawActions, ActionVisualState.Active);
+        SetIndicatorVisual(drawButton, ActionVisualState.Active);
         _enemyRoutine = StartCoroutine(EnemyShootLoop());
     }
 
@@ -1156,9 +1185,9 @@ public partial class RoundController : MonoBehaviour
             SetActionState(_pullActions, ActionVisualState.Active);
             SetIndicatorVisual(pullButton, ActionVisualState.Active);
         }
+        _phase = Phase.Drawn;
         SetVisible(playerGun, true);
         PlaySfx(sfxDraw);
-        _phase = Phase.Drawn;
         LogBellToDraw();
     }
 
@@ -1209,19 +1238,20 @@ public partial class RoundController : MonoBehaviour
         if (_phase != Phase.Aimed && _phase != Phase.AimedAfterMiss)
             return;
 
+        NoteCrossfireOverHitbox();
+        ShowGunFlash();
         PlaySfx(sfxPlayerShot);
         PlayGunRecoil();
         SetActionState(_fireActions, ActionVisualState.Pressed);
         SetIndicatorVisual(fireButton, ActionVisualState.Pressed);
         NoteDebugPlayerShot();
 
-        bool hit = _trainingActive || IsCrossfireOverOpaqueEnemy();
+        bool hit = _trainingActive || _crossfireWasOverHitbox;
         if (hit)
         {
             LogPlayerReaction(hit: true);
             StopCrossfireRoutine();
             StopEnemyRoutine();
-            ShowHitMarkerAtCrossfire();
             PlaySfx(sfxEnemyDie);
             FinishRound(RoundOutcome.Win);
             return;
@@ -1260,9 +1290,9 @@ public partial class RoundController : MonoBehaviour
 
     private void OnPauseMapAbortClicked()
     {
-        SetPanelActive(pauseMenuRoot, false);
-        if (areYouSureAbortPanel != null)
+        if (!IsTraining && areYouSureAbortPanel != null)
         {
+            SetPanelActive(pauseMenuRoot, false);
             ShowAbortConfirmation();
             return;
         }
@@ -1274,11 +1304,11 @@ public partial class RoundController : MonoBehaviour
     {
         WorldMapPreview.OpenMapOnLoad = !IsTraining;
         NotifyTrainingLeftToMenu();
-        Time.timeScale = 1f;
-        AudioListener.pause = false;
+        Time.timeScale = YandexGamesSdk.PlatformPaused ? 0f : 1f;
+        AudioListener.pause = YandexGamesSdk.PlatformPaused;
         _paused = false;
         GamePauseGate.IsUserPaused = false;
-        YandexGamesSdk.GameplayStop();
+        PlatformGameplay.Stop();
         SceneManager.LoadScene("MainMenu");
     }
 
@@ -1288,7 +1318,7 @@ public partial class RoundController : MonoBehaviour
         GamePauseGate.IsUserPaused = true;
         Time.timeScale = 0f;
         AudioListener.pause = true;
-        YandexGamesSdk.GameplayStop();
+        PlatformGameplay.Stop();
         SetGameplayHudInteractable(false);
         if (pauseMenuRoot != null)
             pauseMenuRoot.transform.SetAsLastSibling();
@@ -1315,12 +1345,13 @@ public partial class RoundController : MonoBehaviour
         {
             Time.timeScale = 1f;
             AudioListener.pause = false;
-            if (_phase != Phase.Finished && (IsTraining || IsDuelInProgress()))
-                YandexGamesSdk.GameplayStart();
         }
+        if (IsDuelInProgress())
+            PlatformGameplay.Start();
 
         // Re-apply action interactable states for current phase visuals.
-        ReassertActionInteractable();
+        if (!YandexGamesSdk.PlatformPaused)
+            ReassertActionInteractable();
         RefreshMenuButtonInteractable();
     }
 
@@ -1408,7 +1439,9 @@ public partial class RoundController : MonoBehaviour
                 break;
             case Phase.WaitingForBell:
             case Phase.BellShown:
-                SetActionState(_drawActions, ActionVisualState.Active);
+                SetActionState(_drawActions, _phase == Phase.BellShown
+                    ? ActionVisualState.Active
+                    : ActionVisualState.WaitingForBell);
                 SetActionState(_pullActions, ActionVisualState.Inactive);
                 SetActionState(_fireActions, ActionVisualState.Inactive);
                 break;
@@ -1462,6 +1495,8 @@ public partial class RoundController : MonoBehaviour
     {
         _phase = Phase.Finished;
         _outcome = outcome;
+        SetCrossfireOnTarget(false);
+        RecordBalanceRound(outcome);
         if (outcome == RoundOutcome.Win && !_trainingActive)
             _series.AddWin(TakeDuelSeconds());
 
@@ -1480,7 +1515,7 @@ public partial class RoundController : MonoBehaviour
         SetIndicatorVisual(pullButton, ActionVisualState.Inactive);
         SetIndicatorVisual(fireButton, ActionVisualState.Inactive);
 
-        YandexGamesSdk.GameplayStop();
+        PlatformGameplay.Stop();
         if (_trainingActive)
         {
             RefreshMenuButtonInteractable();
@@ -1659,6 +1694,7 @@ public partial class RoundController : MonoBehaviour
             enemyBodyImage.sprite = fired;
         SyncHitMask();
         RefreshHitboxDebug();
+        NoteCrossfireOverHitbox();
         ShowShotFlash();
     }
 
@@ -1672,6 +1708,7 @@ public partial class RoundController : MonoBehaviour
             enemyBodyImage.sprite = idle;
         SyncHitMask();
         RefreshHitboxDebug();
+        NoteCrossfireOverHitbox();
         HideShotFlash();
     }
 
@@ -1778,22 +1815,38 @@ public partial class RoundController : MonoBehaviour
 
     private void NoteCrossfireOverHitbox()
     {
-        if (crossfire == null || !crossfire.gameObject.activeInHierarchy)
-        {
-            _crossfireWasOverHitbox = false;
+        if (_paused || YandexGamesSdk.PlatformPaused)
             return;
-        }
 
         if (_phase != Phase.Aimed && _phase != Phase.AimedAfterMiss && _phase != Phase.MissRecovery)
             return;
 
-        bool over = IsCrossfireOverOpaqueEnemy();
-        if (over && !_crossfireWasOverHitbox)
+        bool over = crossfire != null && crossfire.gameObject.activeInHierarchy && IsCrossfireOverOpaqueEnemy();
+        bool changed = over != _crossfireWasOverHitbox;
+        SetCrossfireOnTarget(over);
+        if (!changed)
+            return;
+
+        if (over)
         {
-            LogCrossfireEnteredHitbox();
+            _firstHitboxEnter ??= Time.time;
             NoteTimingHitboxEntered();
+            CrossfireEnterHitbox?.Invoke();
         }
-        _crossfireWasOverHitbox = over;
+        else
+        {
+            if (_firstHitboxEnter.HasValue)
+                _firstHitboxLeave ??= Time.time;
+            CrossfireLeaveHitbox?.Invoke();
+        }
+        string message = (over ? nameof(CrossfireEnterHitbox) : nameof(CrossfireLeaveHitbox))
+            + ": " + FormatSeconds(FactTimeFromBell()) + " s";
+        if (TimingDebugActive)
+            TimingDebugEvent(message);
+        else
+            DebugEvent(message);
+        if (IsTraining)
+            RefreshTrainingActions();
     }
 
     private void SetCrossfireLocalPosition(Vector3 localPos)
@@ -1859,13 +1912,12 @@ public partial class RoundController : MonoBehaviour
     {
         float elapsed = 0f;
         float dur = Mathf.Max(0.01f, gunRecoilDuration);
-        Vector3 up = _gunRestLocalPos + Vector3.up * gunRecoilAmount;
         while (elapsed < dur)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / dur);
             float arc = t < 0.35f ? t / 0.35f : 1f - (t - 0.35f) / 0.65f;
-            playerGunRect.localPosition = Vector3.Lerp(_gunRestLocalPos, up, arc);
+            playerGunRect.localPosition = _gunRestLocalPos + Vector3.up * (gunRecoilAmount * Mathf.Clamp01(arc));
             yield return null;
         }
 
@@ -2056,11 +2108,11 @@ public partial class RoundController : MonoBehaviour
             _ => sprites.disabledSprite
         };
 
-        // A completed action stays pressed even though its button is no longer interactive.
-        button.transition = state == ActionVisualState.Pressed
+        // Keep the chosen sprite for completed actions and for Draw during the false-start window.
+        button.transition = state is ActionVisualState.Pressed or ActionVisualState.WaitingForBell
             ? Selectable.Transition.None
             : Selectable.Transition.SpriteSwap;
-        button.interactable = state == ActionVisualState.Active;
+        button.interactable = state is ActionVisualState.Active or ActionVisualState.WaitingForBell;
 
         if (touch.image != null && sprite != null)
         {

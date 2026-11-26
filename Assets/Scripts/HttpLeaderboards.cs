@@ -17,6 +17,19 @@ public class HttpLeaderboards : MonoBehaviour
     private const string BaseUrl = "https://qdg2-leaderboards.s772068.workers.dev";
 
     public static HttpLeaderboards Instance { get; private set; }
+    public static event Action<string, bool> DeliveryCompleted;
+
+    public static bool SupportsScoreSubmission
+    {
+        get
+        {
+#if UNITY_EDITOR
+            return false;
+#else
+            return true;
+#endif
+        }
+    }
 
     private static readonly string[] CityBoards =
     {
@@ -31,6 +44,9 @@ public class HttpLeaderboards : MonoBehaviour
     private static string PendingKey(string board) => "QDG2_LeaderboardPending_" + board;
     private static string ConfirmedKey(string board) => "QDG2_LeaderboardConfirmed_" + board;
 
+    public static bool HasPendingRecord(string board) =>
+        SupportsScoreSubmission && PlayerPrefs.HasKey(PendingKey(board));
+
     private static void QueueRecord(string board, int score)
     {
         if (PlayerPrefs.GetInt(ConfirmedKey(board), -1) != score)
@@ -39,20 +55,32 @@ public class HttpLeaderboards : MonoBehaviour
 
     public static void QueueCityClear(int cityIndex)
     {
+        QueueSavedRecords(cityIndex);
+        PlayerPrefs.Save();
+    }
+
+    private static void QueueSavedRecords(int completedCity)
+    {
         for (int i = 0; i < CityBoards.Length; i++)
         {
             int best = CityProgress.GetBestDollars(i);
-            if (i == cityIndex || best > 0)
+            if (i == completedCity || best > 0)
                 QueueRecord(CityBoards[i], best);
         }
         int fastest = CityProgress.GetFastestMs();
         if (fastest >= 0)
             QueueRecord(FastestBoard, fastest);
-        PlayerPrefs.Save();
     }
 
     private IEnumerator Start()
     {
+        if (!SupportsScoreSubmission)
+            yield break;
+
+        // Older builds stored the records locally before this delivery queue existed.
+        QueueSavedRecords(completedCity: -1);
+        PlayerPrefs.Save();
+
         while (true)
         {
             FlushPending();
@@ -62,7 +90,7 @@ public class HttpLeaderboards : MonoBehaviour
 
     public void FlushPending()
     {
-        if (!_flushing && PlayerIdentity.HasNickname)
+        if (SupportsScoreSubmission && !_flushing && PlayerIdentity.HasNickname)
             StartCoroutine(DeliverPending());
     }
 
@@ -80,7 +108,10 @@ public class HttpLeaderboards : MonoBehaviour
             bool acknowledged = false;
             yield return Submit(board, score, nick, ok => acknowledged = ok);
             if (!acknowledged)
+            {
+                DeliveryCompleted?.Invoke(board, false);
                 continue;
+            }
 
             PlayerPrefs.SetInt(ConfirmedKey(board), score);
             if (PlayerPrefs.GetInt(key) == score)
@@ -89,6 +120,7 @@ public class HttpLeaderboards : MonoBehaviour
             LeaderboardCache.Refresh(board);
             if (board != FastestBoard)
                 LeaderboardCache.Refresh(RichestBoard);
+            DeliveryCompleted?.Invoke(board, true);
         }
         _flushing = false;
     }
@@ -243,7 +275,7 @@ public class HttpLeaderboards : MonoBehaviour
 
             if (req.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogWarning("HttpLeaderboards load failed: " + req.error);
+                Debug.LogWarning($"HttpLeaderboards: {board} load failed ({req.result}, HTTP {req.responseCode}): {req.error}");
                 callback?.Invoke(new YandexLeaderboards.BoardPage(false, 0, null));
                 yield break;
             }
